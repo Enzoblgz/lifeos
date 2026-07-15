@@ -60,7 +60,14 @@
   /* ----- Sections ----- */
   section{border-bottom:1px solid var(--g2)}
   .pad{padding:96px 0}
-  .eyebrow{color:var(--g5);margin-bottom:20px}
+  /* Eyebrow = étiquette de section. Assez visible pour cadrer le gros titre :
+     texte blanc, plus grand, précédé d'un trait. Sans lui, le titre arrive sans contexte. */
+  .eyebrow{
+    display:flex;align-items:center;gap:14px;
+    font-size:13px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--white);font-weight:800;margin-bottom:22px;
+  }
+  .eyebrow::before{content:"";width:32px;height:2px;background:var(--white);flex:none}
   h1,h2,h3{text-wrap:balance;letter-spacing:-.02em;font-weight:900;line-height:1.02}
   h1{font-size:clamp(40px,7vw,78px)}
   h2{font-size:clamp(30px,4.6vw,52px)}
@@ -118,7 +125,8 @@
 
   /* ----- Focus (la thèse) ----- */
   .focus{background:var(--white);color:var(--black)}
-  .focus .eyebrow{color:var(--g4)}
+  .focus .eyebrow{color:#000}
+  .focus .eyebrow::before{background:#000}
   .focus h2{max-width:16ch}
   .focus .lead{color:#333}
   .focus .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:64px;
@@ -152,6 +160,23 @@
   .launcher li .x{color:var(--white);font-weight:900}
   @media(max-width:820px){ .launcher .wrap{grid-template-columns:1fr;gap:32px} }
 
+  /* ----- Onglets expliqués ----- */
+  .tabs .lead{margin-top:22px}
+  .tablist{margin-top:52px;border-top:1px solid var(--g2)}
+  .tabrow{display:grid;grid-template-columns:170px 1fr;gap:34px;
+    padding:30px 0;border-bottom:1px solid var(--g2);align-items:start}
+  .tabrow .tabkey{display:inline-flex;align-self:start;align-items:center;gap:8px;
+    border:1px solid var(--g4);padding:9px 13px;font-size:12px;font-weight:900;
+    letter-spacing:2px;color:var(--white)}
+  .tabrow .tabkey .g{color:var(--g4);font-weight:700;font-size:11px}
+  .tabrow h3{font-size:19px;margin-bottom:10px}
+  .tabrow p{font-size:15px;color:var(--g5);line-height:1.65;max-width:62ch}
+  .tabrow p .w{color:var(--white);font-weight:600}
+  @media(max-width:680px){
+    .tabrow{grid-template-columns:1fr;gap:14px;padding:26px 0}
+    .tabrow .tabkey{justify-self:start}
+  }
+
   /* ----- Installation ----- */
   .install .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:56px;
     background:var(--g2);border:1px solid var(--g2)}
@@ -175,6 +200,7 @@
 
   /* ----- CTA final ----- */
   .final{text-align:center}
+  .final .eyebrow{justify-content:center}
   .final h2{max-width:18ch;margin:0 auto 22px}
   .final .lead{margin:0 auto 40px}
   .final .ctarow{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
@@ -208,6 +234,7 @@
     <div class="navlinks">
       <a href="#focus" class="hide-sm">Le verrou</a>
       <a href="#features" class="hide-sm">Fonctions</a>
+      <a href="#tabs" class="hide-sm">Onglets</a>
       <a href="#install" class="hide-sm">Installer</a>
       <a href="/app" class="hide-sm">Version PC</a>
       <a class="cta" href="/download/lifeos.apk" download>Télécharger</a>
@@ -339,6 +366,121 @@
       <li><span class="x">→</span><div><b>Liste blanche de focus</b> : autorise une appli précise (musique, cartes) pendant un bloc.</div></li>
       <li><span class="x">→</span><div><b>Arsenal « Pourquoi »</b> : tes raisons de te lever, affichées quand tu craques en focus.</div></li>
     </ul>
+  </div>
+</section>
+
+<!-- ===================== ONGLETS EXPLIQUÉS ===================== -->
+<section class="tabs pad" id="tabs">
+  <div class="wrap">
+    <p class="label eyebrow reveal">Sous le capot</p>
+    <h2 class="reveal">Chaque onglet, expliqué.</h2>
+    <p class="lead reveal">
+      L'accueil, puis six onglets en bas de l'écran. Voici précisément ce que fait chacun,
+      à quoi il sert, et pourquoi il est là.
+    </p>
+    <div class="tablist reveal">
+
+      <div class="tabrow">
+        <div class="tabkey">ACCUEIL</div>
+        <div class="tabbody">
+          <h3>Le cockpit de ta journée</h3>
+          <p>
+            Ce que tu vois en allumant ton téléphone : l'<span class="w">heure en grand</span>,
+            ton <span class="w">streak</span>, le bloc en cours avec le bouton
+            <span class="w">Entrer en focus</span>, tes blocs du jour cochables d'un tap, « À venir »
+            pour l'inhabituel, tes widgets et tes apps épinglées.
+            <br><b style="color:#fff">Pourquoi&nbsp;:</b> remplacer la grille d'icônes qui appelle au
+            scroll par un tableau de bord qui te rappelle ce que tu as à faire — pas ce que tu pourrais fuir.
+          </p>
+        </div>
+      </div>
+
+      <div class="tabrow">
+        <div class="tabkey">PLAN</div>
+        <div class="tabbody">
+          <h3>Là où tu construis tes journées</h3>
+          <p>
+            Planning et calendrier fusionnés. Une grille du mois : choisis un jour, édite ses
+            <span class="w">blocs horaires</span> (avec les non-négociables « NN ») et ses
+            <span class="w">événements</span>, ponctuels ou récurrents.
+            <br><b style="color:#fff">Pourquoi&nbsp;:</b> c'est la source de tout. Ce que tu poses ici
+            devient les blocs cochables de ton accueil et le carburant de ton focus.
+          </p>
+        </div>
+      </div>
+
+      <div class="tabrow">
+        <div class="tabkey">SEM.</div>
+        <div class="tabbody">
+          <h3>Objectifs par horizon</h3>
+          <p>
+            Tes objectifs classés par échéance : <span class="w">cette semaine, ce mois, cette année,
+            long terme</span>. Chacun se découpe en étapes cochables.
+            <br><b style="color:#fff">Pourquoi&nbsp;:</b> garder le cap au-delà de la journée — relier
+            ce que tu fais aujourd'hui à l'endroit où tu veux être dans un an.
+          </p>
+        </div>
+      </div>
+
+      <div class="tabrow">
+        <div class="tabkey">NOTES</div>
+        <div class="tabbody">
+          <h3>Capture tout, ne perds rien</h3>
+          <p>
+            Des notes façon carnet : <span class="w">texte, photo, vidéo, mémo vocal, dessin</span> au
+            doigt. Enregistrement automatique, corbeille de sécurité de 30 jours.
+            <br><b style="color:#fff">Pourquoi&nbsp;:</b> saisir une idée en deux secondes sans quitter
+            ton système ni ouvrir une autre app — et être sûr qu'elle ne disparaîtra jamais.
+          </p>
+        </div>
+      </div>
+
+      <div class="tabrow">
+        <div class="tabkey">PQ?</div>
+        <div class="tabbody">
+          <h3>Ton arsenal de motivation</h3>
+          <p>
+            Tes raisons profondes, en <span class="w">textes, images et vidéos</span> : pourquoi tu te
+            lèves, ce que tu vises, qui tu ne veux pas décevoir.
+            <br><b style="color:#fff">Pourquoi&nbsp;:</b> quand tu craques en plein focus, l'écran de
+            blocage te les remet sous les yeux. C'est ton « pourquoi » qui te fait tenir, pas la volonté brute.
+          </p>
+        </div>
+      </div>
+
+      <div class="tabrow">
+        <div class="tabkey">APPS</div>
+        <div class="tabbody">
+          <h3>Un vrai launcher, en noir et blanc</h3>
+          <p>
+            Toutes tes applications avec recherche. <span class="w">Épingler</span>, ranger en
+            <span class="w">dossiers</span>, et sur appui long : <span class="w">désinstaller, raccourcis,
+            widgets, infos</span>.
+            <br><b style="color:#fff">Pourquoi&nbsp;:</b> tout ce qu'Android sait faire, sans la grille
+            colorée qui te happe. Tes apps restent là, mais elles ne t'appellent plus.
+          </p>
+        </div>
+      </div>
+
+      <div class="tabrow">
+        <div class="tabkey">STREAK</div>
+        <div class="tabbody">
+          <h3>La constance rendue visible</h3>
+          <p>
+            Ton compteur de <span class="w">jours complets consécutifs</span> et le bouton pour valider
+            ta journée. Un jour compte si <span class="w">tous les blocs NN sont cochés</span> — sinon,
+            retour à zéro.
+            <br><b style="color:#fff">Pourquoi&nbsp;:</b> un chiffre qui monte quand tu tiens et qui
+            tombe quand tu lâches. Pas d'excuse, pas de négociation.
+          </p>
+        </div>
+      </div>
+
+    </div>
+    <div style="margin-top:44px" class="reveal">
+      <a class="cta" href="/download/lifeos.apk" download>Télécharger LifeOS</a>
+      <a class="cta ghost" href="/app" style="margin-left:8px">Explorer sur PC</a>
+    </div>
   </div>
 </section>
 
