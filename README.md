@@ -6,7 +6,7 @@ LifeOS est un launcher Android qui remplace ton écran d'accueil et **verrouille
 téléphone** pendant tes blocs de focus. Planning, notes, objectifs, streak — un seul système,
 synchronisé entre ton téléphone et ton PC.
 
-→ **[Télécharger l'APK](https://lifeos.vercel.app/download/lifeos.apk)** · **[Version PC](https://lifeos.vercel.app/app)** · **[Site](https://lifeos.vercel.app)**
+→ **[Télécharger l'APK](https://lifeos-gamma-five.vercel.app/download/lifeos.apk)** · **[Version PC](https://lifeos-gamma-five.vercel.app/app)** · **[Site](https://lifeos-gamma-five.vercel.app)**
 
 ---
 
