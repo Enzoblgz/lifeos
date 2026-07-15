@@ -947,11 +947,12 @@ fun AuthScreen(onLogged: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
+    var notice by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun submit(signup: Boolean) {
-        busy = true; error = null
+        busy = true; error = null; notice = null
         scope.launch {
             try {
                 val session = withContext(Dispatchers.IO) {
@@ -964,6 +965,23 @@ fun AuthScreen(onLogged: () -> Unit) {
                     withContext(Dispatchers.IO) { Supa.tryPull() }
                     onLogged()
                 }
+            } catch (e: Exception) {
+                error = e.message ?: "Erreur réseau"
+            } finally {
+                busy = false
+            }
+        }
+    }
+
+    /** Envoie l'email de réinitialisation ; le nouveau mot de passe se choisit via le lien reçu. */
+    fun forgot() {
+        if (email.isBlank()) { error = "Entre ton email d'abord."; return }
+        busy = true; error = null; notice = null
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) { Supa.recover(email.trim()) }
+                notice = "Email envoyé à ${email.trim()}. Ouvre le lien pour choisir un nouveau " +
+                    "mot de passe, puis reviens te connecter ici."
             } catch (e: Exception) {
                 error = e.message ?: "Erreur réseau"
             } finally {
@@ -1003,6 +1021,10 @@ fun AuthScreen(onLogged: () -> Unit) {
             Spacer(Modifier.height(12.dp))
             Text(error!!, color = Bw.G5, fontSize = 12.sp, lineHeight = 18.sp)
         }
+        if (notice != null) {
+            Spacer(Modifier.height(12.dp))
+            Text(notice!!, color = Bw.White, fontSize = 12.sp, lineHeight = 18.sp)
+        }
         Spacer(Modifier.height(22.dp))
         BwButton(if (busy) "…" else "Se connecter", enabled = !busy && email.isNotBlank() && pass.length >= 6) {
             submit(signup = false)
@@ -1011,6 +1033,16 @@ fun AuthScreen(onLogged: () -> Unit) {
         BwButton("Créer un compte", ghost = true, enabled = !busy && email.isNotBlank() && pass.length >= 6) {
             submit(signup = true)
         }
+        Spacer(Modifier.height(16.dp))
+        Text(
+            "Mot de passe oublié ?",
+            color = Bw.G5, fontSize = 12.sp, textAlign = TextAlign.Center,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(enabled = !busy) { forgot() }
+                .padding(vertical = 6.dp)
+        )
     }
 }
 

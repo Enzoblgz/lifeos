@@ -69,6 +69,15 @@ object Supa {
             authCall("token?grant_type=refresh_token", JSONObject().put("refresh_token", session.refresh))
         ) ?: throw AuthError("Session expirée — reconnecte-toi")
 
+    /** Où le lien de réinitialisation renvoie : l'interface web, qui finit le changement. */
+    private const val RESET_REDIRECT = "https://lifeos-focus.vercel.app/app"
+
+    /** Envoie l'email de réinitialisation. Supabase répond 200 même si l'email est inconnu. */
+    fun recover(email: String) {
+        val rt = java.net.URLEncoder.encode(RESET_REDIRECT, "UTF-8")
+        authCall("recover?redirect_to=$rt", JSONObject().put("email", email))
+    }
+
     // ---------- STATE ----------
 
     private fun stateReq(session: Session, builder: (Request.Builder) -> Request.Builder): Request =

@@ -73,11 +73,14 @@
     color:var(--g4);padding:9px;font-size:10px;letter-spacing:2px;cursor:pointer;text-transform:uppercase}
   .savebar{position:sticky;bottom:0;padding:12px 20px;background:var(--black);border-top:1px solid var(--g2)}
   .note{padding:14px 20px;font-size:12px;color:var(--g4);line-height:1.6}
-  #login{max-width:380px;margin:12vh auto 0;padding:20px}
-  #login h1{font-size:28px;font-weight:900;letter-spacing:8px;text-align:center}
-  #login .label{display:block;text-align:center;margin:8px 0 34px}
-  #login input{margin-bottom:10px}
-  #login .err{color:var(--g5);font-size:12px;margin:10px 0}
+  #login,#reset{max-width:380px;margin:12vh auto 0;padding:20px}
+  #login h1,#reset h1{font-size:28px;font-weight:900;letter-spacing:8px;text-align:center}
+  #login .label,#reset .label{display:block;text-align:center;margin:8px 0 34px}
+  #login input,#reset input{margin-bottom:10px}
+  #login .err,#reset .err{color:var(--g5);font-size:12px;margin:10px 0}
+  .fp{text-align:center;margin-top:16px}
+  .fp a{color:var(--g5);font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .fp a:hover{color:var(--white)}
   .rules{margin:10px 20px;border:1px solid var(--g2);padding:16px;font-size:13px;color:var(--g5);line-height:1.7}
   .rules b{color:var(--white)}
 </style>
@@ -93,6 +96,16 @@
   <button class="btn" onclick="doAuth(false)">SE CONNECTER</button>
   <div style="height:10px"></div>
   <button class="btn ghost" onclick="doAuth(true)">CRÉER UN COMPTE</button>
+  <div class="fp"><a onclick="sendReset()">Mot de passe oublié ?</a></div>
+</div>
+
+<div id="reset" style="display:none">
+  <h1>LIFEOS</h1>
+  <span class="label">Choisis un nouveau mot de passe</span>
+  <input id="np1" type="password" placeholder="NOUVEAU MOT DE PASSE" autocomplete="new-password">
+  <input id="np2" type="password" placeholder="CONFIRMER" autocomplete="new-password">
+  <div class="err" id="resetErr"></div>
+  <button class="btn" onclick="doReset()">ENREGISTRER LE NOUVEAU MOT DE PASSE</button>
 </div>
 
 <div class="wrap" id="app" style="display:none">
@@ -186,6 +199,38 @@ async function doAuth(signup){
   boot();
 }
 async function logout(){await sb.auth.signOut();location.reload()}
+
+/* ----- Récupération de mot de passe -----
+   1. sendReset : envoie l'email avec un lien qui revient ici.
+   2. Supabase ouvre ce lien → événement PASSWORD_RECOVERY → showReset() (formulaire).
+   3. doReset : enregistre le nouveau mot de passe (la session de récup est déjà active). */
+async function sendReset(){
+  const email=document.getElementById("email").value.trim();
+  const err=document.getElementById("loginErr");
+  err.textContent="";
+  if(!email){err.textContent="Entre ton email ci-dessus, puis reclique.";return}
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  if(error){err.textContent=error.message;return}
+  err.textContent="Email envoyé à "+email+" — clique le lien reçu pour choisir un nouveau mot de passe.";
+}
+function showReset(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="none";
+  document.getElementById("reset").style.display="block";
+}
+async function doReset(){
+  const p1=document.getElementById("np1").value, p2=document.getElementById("np2").value;
+  const err=document.getElementById("resetErr");
+  err.textContent="";
+  if(p1.length<6){err.textContent="Au moins 6 caractères.";return}
+  if(p1!==p2){err.textContent="Les deux mots de passe ne correspondent pas.";return}
+  const {error}=await sb.auth.updateUser({password:p1});
+  if(error){err.textContent=error.message;return}
+  history.replaceState(null,"",location.pathname); // enlève le token de l'URL
+  document.getElementById("reset").style.display="none";
+  boot();
+}
+sb.auth.onAuthStateChange((event)=>{ if(event==="PASSWORD_RECOVERY") showReset(); });
 
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
