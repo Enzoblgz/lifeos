@@ -8,12 +8,10 @@ android/app/release/
 *.keystore
 *.jks
 
-# ===== Artefacts APK/ZIP à la racine (le binaire distribuable vit dans web/download/) =====
+# ===== Artefacts APK/ZIP à la racine (le binaire distribuable vit dans docs/download/) =====
 /*.apk
 /*.zip
 
-# ===== Vercel =====
-web/.vercel/
 
 # ===== OS / éditeurs =====
 .DS_Store

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIFEOS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--black:#000;--white:#fff;--g1:#0a0a0a;--g2:#1a1a1a;--g3:#333;--g4:#666;--g5:#999}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}
+  body{background:var(--black);color:var(--white);min-height:100vh}
+  .wrap{max-width:680px;margin:0 auto;padding-bottom:80px}
+  .label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--g4);font-weight:700}
+  header{display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid var(--g2)}
+  header .logo{font-size:16px;font-weight:900;letter-spacing:6px}
+  header .right{display:flex;gap:12px;align-items:center}
+  .pill{font-size:12px;font-weight:700;letter-spacing:2px;color:var(--g5);border:1px solid var(--g3);padding:4px 10px}
+  .logout{font-size:9px;letter-spacing:2px;color:var(--g4);cursor:pointer;text-transform:uppercase}
+  .btn{display:block;width:100%;background:var(--white);color:var(--black);border:none;padding:16px;
+    font-size:13px;font-weight:900;letter-spacing:4px;text-transform:uppercase;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--white);border:1px solid var(--g3)}
+  .btn:disabled{background:var(--g2);color:var(--g4)}
+  input,textarea{background:var(--g1);border:1px solid var(--g3);color:var(--white);padding:12px;
+    font-size:14px;outline:none;width:100%}
+  input:focus,textarea:focus{border-color:var(--white)}
+  nav{display:flex;border-bottom:1px solid var(--g2)}
+  nav button{flex:1;background:none;border:none;color:var(--g4);padding:14px 0;font-size:10px;
+    font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+  nav button.active{color:var(--white);border-bottom:2px solid var(--white)}
+  .view{display:none;padding:0 0 40px}
+  .view.active{display:block}
+  .sect{padding:20px 20px 8px}
+  .block{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--g1);cursor:pointer}
+  .block .cb{width:20px;height:20px;border:1px solid var(--g4);flex-shrink:0;display:flex;
+    align-items:center;justify-content:center;font-size:12px;font-weight:900;color:transparent}
+  .block.done .cb{background:var(--white);border-color:var(--white);color:var(--black)}
+  .block .time{font-size:11px;color:var(--g4);width:86px;font-variant-numeric:tabular-nums}
+  .block .name{flex:1;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .block.done .name{color:var(--g4);text-decoration:line-through}
+  .nn{font-size:9px;letter-spacing:2px;color:var(--white);border:1px solid var(--white);padding:1px 5px;font-weight:700}
+  .hat{font-size:9px;letter-spacing:2px;color:var(--g4);font-weight:700;text-transform:uppercase}
+  .goal{padding:16px 20px;border-bottom:1px solid var(--g1)}
+  .goal .top{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px}
+  .goal .top b{text-transform:uppercase;letter-spacing:1px}
+  .goal .q{color:var(--g5);font-variant-numeric:tabular-nums}
+  .pbar{height:2px;background:var(--g2)}
+  .pbar div{height:2px;background:var(--white)}
+  .row{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .stepper{width:40px;height:30px;background:none;border:1px solid var(--g3);color:var(--white);
+    font-size:15px;cursor:pointer}
+  .hint{font-size:10px;color:var(--g4);letter-spacing:1px}
+  .proj{padding:16px 20px;border-bottom:1px solid var(--g1)}
+  .proj .h{display:flex;justify-content:space-between}
+  .proj .h b{font-size:14px;text-transform:uppercase;letter-spacing:1px}
+  .alert{font-size:9px;letter-spacing:2px;border:1px solid var(--white);padding:1px 5px;font-weight:700}
+  .st{font-size:9px;letter-spacing:2px;color:var(--g4);font-weight:700}
+  .proj .next{font-size:13px;color:var(--g5);margin-top:6px}
+  .why-item{margin:12px 20px;border:1px solid var(--g2)}
+  .why-item .txt{padding:14px;font-size:15px;line-height:1.55;white-space:pre-wrap}
+  .why-item .del{width:100%;background:none;border:none;border-top:1px solid var(--g2);color:var(--g4);
+    font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:8px;cursor:pointer}
+  .streak-hero{text-align:center;padding:50px 20px 24px}
+  .streak-hero .n{font-size:100px;font-weight:900;line-height:1}
+  .edit-day{margin:14px 20px;border:1px solid var(--g2)}
+  .edit-day h4{padding:12px 14px;font-size:11px;letter-spacing:3px;color:var(--g5);border-bottom:1px solid var(--g2)}
+  .edit-row{display:flex;gap:6px;padding:8px 14px;align-items:center;border-bottom:1px solid var(--g1)}
+  .edit-row input{padding:7px;font-size:12px}
+  .edit-row .i-t{width:120px}.edit-row .i-n{flex:1}.edit-row .i-c{width:110px}
+  .edit-row .nn-toggle,.edit-row .x{cursor:pointer;font-size:10px;font-weight:700;letter-spacing:1px;
+    padding:6px;border:1px solid var(--g3);color:var(--g4);background:none}
+  .edit-row .nn-toggle.on{border-color:var(--white);color:var(--white)}
+  .add-row{display:block;width:calc(100% - 28px);margin:10px 14px;background:none;border:1px dashed var(--g3);
+    color:var(--g4);padding:9px;font-size:10px;letter-spacing:2px;cursor:pointer;text-transform:uppercase}
+  .savebar{position:sticky;bottom:0;padding:12px 20px;background:var(--black);border-top:1px solid var(--g2)}
+  .note{padding:14px 20px;font-size:12px;color:var(--g4);line-height:1.6}
+  #login,#reset{max-width:380px;margin:12vh auto 0;padding:20px}
+  #login h1,#reset h1{font-size:28px;font-weight:900;letter-spacing:8px;text-align:center}
+  #login .label,#reset .label{display:block;text-align:center;margin:8px 0 34px}
+  #login input,#reset input{margin-bottom:10px}
+  #login .err,#reset .err{color:var(--g5);font-size:12px;margin:10px 0}
+  .fp{text-align:center;margin-top:16px}
+  .fp a{color:var(--g5);font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .fp a:hover{color:var(--white)}
+  .rules{margin:10px 20px;border:1px solid var(--g2);padding:16px;font-size:13px;color:var(--g5);line-height:1.7}
+  .rules b{color:var(--white)}
+</style>
+</head>
+<body>
+
+<div id="login" style="display:none">
+  <h1>LIFEOS</h1>
+  <span class="label">Ton système. Partout.</span>
+  <input id="email" type="email" placeholder="EMAIL" autocomplete="email">
+  <input id="pass" type="password" placeholder="MOT DE PASSE" autocomplete="current-password">
+  <div class="err" id="loginErr"></div>
+  <button class="btn" onclick="doAuth(false)">SE CONNECTER</button>
+  <div style="height:10px"></div>
+  <button class="btn ghost" onclick="doAuth(true)">CRÉER UN COMPTE</button>
+  <div class="fp"><a onclick="sendReset()">Mot de passe oublié ?</a></div>
+</div>
+
+<div id="reset" style="display:none">
+  <h1>LIFEOS</h1>
+  <span class="label">Choisis un nouveau mot de passe</span>
+  <input id="np1" type="password" placeholder="NOUVEAU MOT DE PASSE" autocomplete="new-password">
+  <input id="np2" type="password" placeholder="CONFIRMER" autocomplete="new-password">
+  <div class="err" id="resetErr"></div>
+  <button class="btn" onclick="doReset()">ENREGISTRER LE NOUVEAU MOT DE PASSE</button>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+  <header>
+    <div class="logo">LIFEOS</div>
+    <div class="right">
+      <div class="pill" id="streakPill">J0</div>
+      <span class="logout" onclick="logout()">Déconnexion</span>
+    </div>
+  </header>
+  <nav id="nav"></nav>
+  <div class="view" id="v-now"></div>
+  <div class="view" id="v-agenda"></div>
+  <div class="view" id="v-notes"></div>
+  <div class="view" id="v-week"></div>
+  <div class="view" id="v-projects"></div>
+  <div class="view" id="v-why"></div>
+  <div class="view" id="v-edit"></div>
+  <div class="view" id="v-streak"></div>
+</div>
+
+<script>
+/* ================= CONFIG — remplir avec les clés du projet ================= */
+const SUPA_URL  = "https://mpivoorbztrqzfbwqlfb.supabase.co";
+const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1waXZvb3JienRycXpmYndxbGZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5MzM0NzYsImV4cCI6MjA5OTUwOTQ3Nn0.xV8mzwHgXV6VleCL16lWmw7fissyCZsSu9bLrTUA6hk";
+
+const sb = supabase.createClient(SUPA_URL, SUPA_ANON);
+
+/* ================= DÉFAUTS : rien. C'est l'utilisateur qui planifie tout. ================= */
+const DEF_SCHEDULE = {weekday:[],saturday:[],sunday:[]};
+const DEF_GOALS = [];
+const DEF_PROJECTS = [];
+
+/* ================= ÉTAT (même forme que l'export Android) ================= */
+let state = {};
+let user = null;
+let pushTimer = null;
+
+const pad = x => String(x).padStart(2,"0");
+function dateKey(offset=0){const d=new Date();d.setDate(d.getDate()+offset);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function dayKey(){return dateKey(0)}
+function weekKey(){const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+
+function schedule(){try{return state.schedule?JSON.parse(state.schedule):DEF_SCHEDULE}catch(e){return DEF_SCHEDULE}}
+function events(){try{return JSON.parse(state.events||"[]")}catch(e){return []}}
+function goalsDef(){try{return state.goalsDef?JSON.parse(state.goalsDef):DEF_GOALS}catch(e){return DEF_GOALS}}
+function projects(){try{return state.projects?JSON.parse(state.projects):DEF_PROJECTS}catch(e){return DEF_PROJECTS}}
+function occursOn(e,k){
+  if(e.d===k)return true;
+  const r=e.rec||"none";
+  if(r==="none"||e.d>k)return false;
+  const a=new Date(e.d+"T00:00:00"),b=new Date(k+"T00:00:00");
+  if(r==="daily")return true;
+  if(r==="weekly")return a.getDay()===b.getDay();
+  if(r==="monthly")return a.getDate()===b.getDate();
+  return false;
+}
+function startMin(t){if(!t)return 1e9;const m=t.match(/(\d+)h(\d*)/);
+  return m?(+m[1])*60+(+(m[2]||0)):1e9}
+function todayBlocks(){
+  // la journée = les événements du calendrier d'aujourd'hui, rien d'autre
+  return events().filter(e=>occursOn(e,dayKey()))
+    .map(e=>({t:e.t||"",n:e.n,c:"",nn:!!e.nn}))
+    .sort((a,b)=>startMin(a.t)-startMin(b.t));
+}
+function checks(){return (state["checks-"+dayKey()]||[]).map(Number)}
+function goalsDone(){const raw=state["goals-"+weekKey()];return raw?raw.split(",").map(Number):goalsDef().map(()=>0)}
+function whyItems(){try{return JSON.parse(state.why||"[]")}catch(e){return []}}
+
+function mutate(fn){fn();schedulePush();renderAll()}
+function schedulePush(){
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(async()=>{
+    await sb.from("user_state").upsert({user_id:user.id,data:state});
+  },800);
+}
+
+/* ================= AUTH ================= */
+async function doAuth(signup){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("pass").value;
+  const err=document.getElementById("loginErr");
+  err.textContent="";
+  const {data,error}= signup
+    ? await sb.auth.signUp({email,password})
+    : await sb.auth.signInWithPassword({email,password});
+  if(error){err.textContent=error.message;return}
+  if(signup && !data.session){err.textContent="Compte créé — confirme ton email puis connecte-toi.";return}
+  boot();
+}
+async function logout(){await sb.auth.signOut();location.reload()}
+
+/* ----- Récupération de mot de passe -----
+   1. sendReset : envoie l'email avec un lien qui revient ici.
+   2. Supabase ouvre ce lien → événement PASSWORD_RECOVERY → showReset() (formulaire).
+   3. doReset : enregistre le nouveau mot de passe (la session de récup est déjà active). */
+async function sendReset(){
+  const email=document.getElementById("email").value.trim();
+  const err=document.getElementById("loginErr");
+  err.textContent="";
+  if(!email){err.textContent="Entre ton email ci-dessus, puis reclique.";return}
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  if(error){err.textContent=error.message;return}
+  err.textContent="Email envoyé à "+email+" — clique le lien reçu pour choisir un nouveau mot de passe.";
+}
+function showReset(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="none";
+  document.getElementById("reset").style.display="block";
+}
+async function doReset(){
+  const p1=document.getElementById("np1").value, p2=document.getElementById("np2").value;
+  const err=document.getElementById("resetErr");
+  err.textContent="";
+  if(p1.length<6){err.textContent="Au moins 6 caractères.";return}
+  if(p1!==p2){err.textContent="Les deux mots de passe ne correspondent pas.";return}
+  const {error}=await sb.auth.updateUser({password:p1});
+  if(error){err.textContent=error.message;return}
+  history.replaceState(null,"",location.pathname); // enlève le token de l'URL
+  document.getElementById("reset").style.display="none";
+  boot();
+}
+sb.auth.onAuthStateChange((event)=>{ if(event==="PASSWORD_RECOVERY") showReset(); });
+
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){
+    document.getElementById("login").style.display="block";
+    document.getElementById("app").style.display="none";
+    return;
+  }
+  user=session.user;
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+  const {data}=await sb.from("user_state").select("data").eq("user_id",user.id).maybeSingle();
+  state=(data&&data.data)||{};
+  renderAll();
+  sb.channel("state")
+    .on("postgres_changes",
+      {event:"*",schema:"public",table:"user_state",filter:`user_id=eq.${user.id}`},
+      payload=>{state=payload.new.data||{};renderAll()})
+    .subscribe();
+}
+
+/* ================= RENDER ================= */
+const TABS=[["now","NOW"],["agenda","AGENDA"],["week","SEMAINE"],["notes","NOTES"],["why","POURQUOI"],["streak","STREAK"]];
+let tab="now";
+function renderNav(){
+  document.getElementById("nav").innerHTML=TABS.map(([id,l])=>
+    `<button class="${tab===id?'active':''}" onclick="tab='${id}';renderAll()">${l}</button>`).join("");
+  TABS.forEach(([id])=>document.getElementById("v-"+id).classList.toggle("active",tab===id));
+}
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+
+function renderNow(){
+  const blocks=todayBlocks(), ck=checks();
+  if(!blocks.length){
+    document.getElementById("v-now").innerHTML=`
+      <div class="sect" style="padding-top:60px">
+        <span class="label">Rien de planifié</span>
+        <div style="font-size:30px;font-weight:900;margin:12px 0 10px">TA JOURNÉE EST VIDE.</div>
+        <div class="note" style="padding:0 0 20px">Note tes événements du jour dans AGENDA — ils apparaissent ici et sur le téléphone.</div>
+        <button class="btn" onclick="tab='agenda';renderAll()">PLANIFIER MA JOURNÉE</button>
+      </div>`;
+    return;
+  }
+  const now=new Date().getHours()*60+new Date().getMinutes();
+  const mins=t=>t.replace("-","–").split("–").map(s=>{const p=s.trim().split("h");return +p[0]*60+(+(p[1]||0))});
+  const hasEnd=t=>{const m=mins(t);return m.length>1&&m[1]>m[0]};
+  let cur=-1,mode="done";
+  // fin explicite contenant l'instant
+  blocks.forEach((b,i)=>{if(mode!=="now"&&b.t&&hasEnd(b.t)){const[a,z]=mins(b.t);if(now>=a&&now<z){cur=i;mode="now"}}});
+  // sinon : dernier bloc commencé (sans fin = ouvert)
+  if(mode!=="now"){
+    let cand=-1;
+    blocks.forEach((b,i)=>{if(b.t&&mins(b.t)[0]<=now)cand=i});
+    if(cand>=0&&!(hasEnd(blocks[cand].t)&&now>=mins(blocks[cand].t)[1])){cur=cand;mode="now"}
+  }
+  if(mode==="done")blocks.forEach((b,i)=>{if(mode==="done"&&b.t&&mins(b.t)[0]>now){cur=i;mode="next"}});
+  const pct=blocks.length?Math.round(100*ck.length/blocks.length):0;
+  document.getElementById("v-now").innerHTML=`
+    <div class="sect">
+      <span class="label">${mode==="now"?"MAINTENANT":mode==="next"?"PROCHAIN BLOC":"JOURNÉE TERMINÉE"}</span>
+      <div style="font-size:30px;font-weight:900;text-transform:uppercase;margin:10px 0 6px">
+        ${cur>=0?esc(blocks[cur].n):"REPOS."}</div>
+      ${cur>=0?`<span class="hint">${blocks[cur].t} · ${esc(blocks[cur].c.toUpperCase())}</span>`:""}
+    </div>
+    <div class="sect" style="display:flex;justify-content:space-between">
+      <span class="label">Aujourd'hui</span><span class="label">${pct} %</span>
+    </div>
+    <div class="pbar" style="margin:0 20px 8px"><div style="width:${pct}%"></div></div>
+    ${blocks.map((b,i)=>`
+      <div class="block ${ck.includes(i)?'done':''}" onclick="toggleCheck(${i})">
+        <div class="cb">✕</div><div class="time">${b.t}</div>
+        <div class="name">${esc(b.n)}</div>
+        <span class="hat">${esc(b.c)}</span>${b.nn?'<span class="nn">NN</span>':''}
+      </div>`).join("")}
+    <div class="note">Le mode FOCUS (verrouillage) se lance depuis le téléphone. Ici tu pilotes, là-bas tu exécutes.</div>`;
+}
+function toggleCheck(i){
+  mutate(()=>{
+    const k="checks-"+dayKey();
+    const s=new Set((state[k]||[]).map(String));
+    s.has(String(i))?s.delete(String(i)):s.add(String(i));
+    state[k]=[...s];
+  });
+}
+
+/* ----- Agenda (calendrier LifeOS — mêmes données que le téléphone) ----- */
+function frDate(k){try{const d=new Date(k+"T00:00:00");
+  return d.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"}).toUpperCase()}catch(e){return k}}
+function renderAgenda(){
+  const evs=events().slice().sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));
+  const today=dayKey();
+  const upcoming=evs.filter(e=>e.d>=today), past=evs.filter(e=>e.d<today);
+  const REC={none:"",daily:" ↻ JOUR",weekly:" ↻ SEM.",monthly:" ↻ MOIS"};
+  const row=e=>`<div class="block" style="cursor:default">
+      <div class="time" style="width:110px">${frDate(e.d)}</div>
+      <div class="time" style="width:52px">${esc(e.t||"")}</div>
+      <div class="name">${esc(e.n)}${REC[e.rec||"none"]||""}</div>
+      ${e.nn?'<span class="nn">NN</span>':''}
+      <button class="stepper" style="width:32px;height:26px" onclick="delEvent(${e.id})">✕</button>
+    </div>`;
+  document.getElementById("v-agenda").innerHTML=`
+    <div class="sect"><span class="label">Agenda — synchronisé avec le téléphone</span></div>
+    ${upcoming.length?upcoming.map(row).join(""):`<div class="note">Rien à venir.</div>`}
+    ${past.length?`<div class="sect"><span class="label">Passé / origine des récurrences</span></div>`+past.slice(-5).map(row).join(""):""}
+    <div style="padding:14px 20px;display:flex;gap:8px;flex-wrap:wrap">
+      <input type="date" id="evDate" value="${today}" style="width:160px">
+      <input type="text" id="evTime" placeholder="14h00" style="width:90px">
+      <input type="text" id="evName" placeholder="Meeting…" style="flex:1;min-width:160px">
+      <select id="evRec" style="background:var(--g1);border:1px solid var(--g3);color:var(--white);padding:12px">
+        <option value="none">UNIQUE</option><option value="daily">CHAQUE JOUR</option>
+        <option value="weekly">CHAQUE SEMAINE</option><option value="monthly">CHAQUE MOIS</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:2px;color:var(--g5)">
+        <input type="checkbox" id="evNn" style="width:auto">NN</label>
+    </div>
+    <div style="padding:0 20px 20px">
+      <button class="btn ghost" onclick="addEvent()">+ AJOUTER</button>
+    </div>`;
+}
+function addEvent(){
+  const d=document.getElementById("evDate").value;
+  const t=document.getElementById("evTime").value.trim();
+  const n=document.getElementById("evName").value.trim();
+  const rec=document.getElementById("evRec").value;
+  const nn=document.getElementById("evNn").checked;
+  if(!d||!n)return;
+  mutate(()=>{
+    const evs=events();evs.push({id:Date.now(),d,t,n,nn,rec});
+    state.events=JSON.stringify(evs);
+  });
+}
+function delEvent(id){
+  mutate(()=>{
+    state.events=JSON.stringify(events().filter(e=>e.id!==id));
+  });
+}
+
+/* ----- Notes (façon Keep — mêmes données que le téléphone) -----
+   Supprimer = corbeille (30 jours), jamais de perte directe : même règle que sur le téléphone.
+   Les pièces jointes (photo, vidéo, audio, dessin) vivent sur le téléphone : ici on les compte. */
+const TRASH_DAYS=30;
+function notes(){try{return JSON.parse(state.notes||"[]")}catch(e){return []}}
+function trash(){try{return JSON.parse(state.notes_trash||"[]")}catch(e){return []}}
+function attLabel(n){
+  const a=n.att||[];if(!a.length)return "";
+  const c={};a.forEach(x=>c[x.t]=(c[x.t]||0)+1);
+  const parts=[];
+  if(c.img)parts.push(c.img+" image");
+  if(c.vid)parts.push(c.vid+" vidéo");
+  if(c.aud)parts.push(c.aud+" audio");
+  if(c.drw)parts.push(c.drw+" dessin");
+  return `<div class="label" style="margin-top:8px">📎 ${parts.join(" · ")} — sur le téléphone</div>`;
+}
+function renderNotes(){
+  const ns=notes().slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
+  const tr=trash().slice().sort((a,b)=>(b.del||0)-(a.del||0));
+  document.getElementById("v-notes").innerHTML=`
+    <div class="sect"><span class="label">Notes — synchronisées avec le téléphone</span></div>
+    <div style="padding:14px 20px">
+      <input type="text" id="ntTitle" placeholder="Titre…" style="margin-bottom:8px">
+      <textarea id="ntBody" rows="3" placeholder="Ta note…"></textarea>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="addNote()">+ NOTE</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 20px 30px">
+      ${ns.map(n=>`<div class="why-item" style="margin:0">
+        <div class="txt">${n.title?`<b>${esc(n.title)}</b><br>`:""}${esc(n.body||"")}${attLabel(n)}</div>
+        <button class="del" onclick="delNote(${n.id})">SUPPRIMER</button>
+      </div>`).join("")||`<div class="note">Aucune note.</div>`}
+    </div>
+    <div class="sect"><span class="label">Corbeille — vidée après ${TRASH_DAYS} jours</span></div>
+    <div style="padding:0 20px 40px">
+      ${tr.map(n=>{
+        const days=Math.floor((Date.now()-(n.del||Date.now()))/86400000);
+        return `<div class="why-item" style="margin:0 0 10px">
+          <div class="txt">${n.title?`<b>${esc(n.title)}</b><br>`:""}${esc(n.body||"")}
+            <div class="label" style="margin-top:8px">Supprimée il y a ${days}j · reste ${Math.max(0,TRASH_DAYS-days)}j</div>
+          </div>
+          <button class="del" onclick="restoreNote(${n.id})">RESTAURER</button>
+          <button class="del" onclick="destroyNote(${n.id})">SUPPRIMER DÉFINITIVEMENT</button>
+        </div>`;
+      }).join("")||`<div class="note">Corbeille vide.</div>`}
+    </div>`;
+}
+function addNote(){
+  const title=document.getElementById("ntTitle").value.trim();
+  const body=document.getElementById("ntBody").value.trim();
+  if(!title&&!body)return;
+  mutate(()=>{
+    const ns=notes();ns.push({id:Date.now(),title,body,ts:Date.now(),att:[]});
+    state.notes=JSON.stringify(ns);
+  });
+}
+function delNote(id){
+  mutate(()=>{
+    const n=notes().find(x=>x.id===id);if(!n)return;
+    state.notes=JSON.stringify(notes().filter(x=>x.id!==id));
+    const t=trash();t.push({...n,del:Date.now()});
+    state.notes_trash=JSON.stringify(t);
+  });
+}
+function restoreNote(id){
+  mutate(()=>{
+    const n=trash().find(x=>x.id===id);if(!n)return;
+    state.notes_trash=JSON.stringify(trash().filter(x=>x.id!==id));
+    delete n.del;
+    const ns=notes();ns.push({...n,ts:Date.now()});
+    state.notes=JSON.stringify(ns);
+  });
+}
+function destroyNote(id){
+  if(!confirm("Supprimer définitivement ? Les médias liés restent sur le téléphone jusqu'à sa prochaine purge."))return;
+  mutate(()=>{state.notes_trash=JSON.stringify(trash().filter(x=>x.id!==id))});
+}
+
+/* Objectifs par horizon (clé goals2 — même modèle que le téléphone) */
+const HORIZONS=[["week","CETTE SEMAINE"],["month","CE MOIS"],["year","CETTE ANNÉE"],["life","LONG TERME"]];
+function goals2(){try{return JSON.parse(state.goals2||"[]")}catch(e){return []}}
+function saveGoals2(list){state.goals2=JSON.stringify(list)}
+function renderWeek(){
+  const objs=goals2();
+  let html=`<div class="sect"><span class="label">Objectifs — hors planning</span></div>
+    <div style="padding:0 20px;display:flex;gap:8px;flex-wrap:wrap">
+      <input type="text" id="objName" placeholder="Objectif ou casquette…" style="flex:1;min-width:180px">
+      <select id="objHorizon" style="background:var(--g1);border:1px solid var(--g3);color:var(--white);padding:12px">
+        ${HORIZONS.map(([k,l])=>`<option value="${k}">${l}</option>`).join("")}
+      </select>
+      <button class="stepper" style="width:auto;padding:0 16px;height:auto" onclick="addObj()">+ OBJECTIF</button>
+    </div>`;
+  HORIZONS.forEach(([hKey,hLabel])=>{
+    const group=objs.filter(o=>(o.h||"week")===hKey);
+    if(!group.length)return;
+    html+=`<div class="sect"><span class="label">${hLabel}</span></div>`;
+    group.forEach(o=>{
+      const steps=o.steps||[];
+      const done=steps.filter(s=>s.done).length;
+      html+=`<div class="why-item" style="margin:8px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px 6px">
+          <b style="font-size:13px;letter-spacing:1px">${esc(o.n).toUpperCase()}</b>
+          <span style="display:flex;gap:10px;align-items:center">
+            ${steps.length?`<span class="hint">${done} / ${steps.length}</span>`:""}
+            <button class="stepper" style="width:28px;height:24px" onclick="delObj(${o.id})">✕</button>
+          </span>
+        </div>
+        ${steps.length?`<div class="pbar" style="margin:0 14px"><div style="width:${100*done/Math.max(1,steps.length)}%"></div></div>`:""}
+        ${steps.map((s,si)=>`
+          <div class="block" style="padding:8px 14px" onclick="toggleStep(${o.id},${si})">
+            <div class="cb" style="width:15px;height:15px;${s.done?'background:var(--white);color:var(--black);border-color:var(--white)':''}">✕</div>
+            <div class="name" style="text-transform:none;font-weight:400;${s.done?'color:var(--g4);text-decoration:line-through':''}">${esc(s.t)}</div>
+            <button class="stepper" style="width:26px;height:22px" onclick="event.stopPropagation();delStep(${o.id},${si})">✕</button>
+          </div>`).join("")}
+        <div style="display:flex;gap:8px;padding:8px 14px 12px">
+          <input type="text" id="step-${o.id}" placeholder="+ étape…" style="padding:8px;font-size:13px">
+          <button class="stepper" style="width:auto;padding:0 12px" onclick="addStep(${o.id})">OK</button>
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById("v-week").innerHTML=html;
+}
+function addObj(){
+  const n=document.getElementById("objName").value.trim();
+  const h=document.getElementById("objHorizon").value;
+  if(!n)return;
+  mutate(()=>{const l=goals2();l.push({id:Date.now(),n,h,steps:[]});saveGoals2(l)});
+}
+function delObj(id){mutate(()=>{saveGoals2(goals2().filter(o=>o.id!==id))})}
+function toggleStep(id,si){
+  mutate(()=>{const l=goals2();const o=l.find(x=>x.id===id);
+    if(o&&o.steps[si])o.steps[si].done=!o.steps[si].done;saveGoals2(l)});
+}
+function addStep(id){
+  const inp=document.getElementById("step-"+id);
+  const t=inp.value.trim();if(!t)return;
+  mutate(()=>{const l=goals2();const o=l.find(x=>x.id===id);
+    if(o){o.steps=o.steps||[];o.steps.push({t,done:false})}saveGoals2(l)});
+}
+function delStep(id,si){
+  mutate(()=>{const l=goals2();const o=l.find(x=>x.id===id);
+    if(o&&o.steps)o.steps.splice(si,1);saveGoals2(l)});
+}
+
+function renderProjects(){
+  document.getElementById("v-projects").innerHTML=`
+    <div class="sect"><span class="label">Projets actifs</span></div>`+
+    (projects().length?"":`<div class="note">Aucun projet défini.</div>`)+
+    projects().map(p=>`<div class="proj">
+      <div class="h"><b>${esc(p.n)}</b>
+        <span class="${p.alert?'alert':'st'}">${p.alert?'ACTION REQUISE':'ACTIF'}</span></div>
+      <div class="next">${esc(p.next)}</div>
+      <div class="hat" style="margin-top:6px">${esc(p.c)}</div>
+    </div>`).join("");
+}
+
+function renderWhy(){
+  const items=whyItems();
+  const txts=items.map((it,i)=>[it,i]).filter(([it])=>it.type==="txt");
+  const medias=items.length-txts.length;
+  document.getElementById("v-why").innerHTML=`
+    <div class="sect"><span class="label">Pourquoi — arsenal de motivation</span></div>`+
+    (txts.length?txts.map(([it,i])=>`<div class="why-item">
+      <div class="txt">${esc(it.text)}</div>
+      <button class="del" onclick="delWhy(${i})">SUPPRIMER</button></div>`).join(""):
+      `<div class="note">Aucun texte. Écris ce qui te rappelle pourquoi tu te lèves à 6h15.</div>`)+
+    (medias?`<div class="note">${medias} image(s)/vidéo(s) stockées sur le téléphone (non affichables ici pour l'instant).</div>`:"")+
+    `<div style="padding:14px 20px">
+      <textarea id="whyText" rows="3" placeholder="Ton texte de motivation…"></textarea>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="addWhy()">+ AJOUTER LE TEXTE</button>
+    </div>`;
+}
+function addWhy(){
+  const t=document.getElementById("whyText").value.trim();
+  if(!t)return;
+  mutate(()=>{
+    const items=whyItems();items.push({type:"txt",text:t});
+    state.why=JSON.stringify(items);
+  });
+}
+function delWhy(i){
+  mutate(()=>{
+    const items=whyItems();items.splice(i,1);
+    state.why=JSON.stringify(items);
+  });
+}
+
+/* ----- Éditeur emploi du temps / quotas ----- */
+const DAY_LABELS={today:"AUJOURD'HUI",tomorrow:"DEMAIN — appliqué à minuit"};
+let draft=null;
+function renderEdit(){
+  if(!draft){
+    const s={};
+    try{s.today=JSON.parse(state["plan-"+dateKey(0)]||"[]")}catch(e){s.today=[]}
+    try{s.tomorrow=JSON.parse(state["plan-"+dateKey(1)]||"[]")}catch(e){s.tomorrow=[]}
+    if(!Array.isArray(s.today))s.today=[];
+    if(!Array.isArray(s.tomorrow))s.tomorrow=[];
+    draft={sched:s};
+  }
+  const dayHtml=Object.keys(DAY_LABELS).map(day=>`
+    <div class="edit-day"><h4>${DAY_LABELS[day]}</h4>
+      ${(draft.sched[day]||[]).map((b,i)=>`
+        <div class="edit-row">
+          <input class="i-t" value="${esc(b.t)}" onchange="draft.sched['${day}'][${i}].t=this.value">
+          <input class="i-n" value="${esc(b.n)}" onchange="draft.sched['${day}'][${i}].n=this.value">
+          <input class="i-c" value="${esc(b.c)}" onchange="draft.sched['${day}'][${i}].c=this.value">
+          <button class="nn-toggle ${b.nn?'on':''}" onclick="draft.sched['${day}'][${i}].nn=!draft.sched['${day}'][${i}].nn;renderEdit()">NN</button>
+          <button class="x" onclick="draft.sched['${day}'].splice(${i},1);renderEdit()">✕</button>
+        </div>`).join("")}
+      <button class="add-row" onclick="draft.sched['${day}'].push({t:'09h00–10h00',n:'Nouveau bloc',c:'perso',nn:false});renderEdit()">+ Bloc</button>
+    </div>`).join("");
+  document.getElementById("v-edit").innerHTML=`
+    <div class="sect"><span class="label">Éditer — se synchronise sur le téléphone</span></div>
+    ${dayHtml}
+    <div class="savebar"><button class="btn" onclick="saveEdit()">ENREGISTRER ET SYNCHRONISER</button></div>`;
+}
+function saveEdit(){
+  mutate(()=>{
+    state["plan-"+dateKey(0)]=JSON.stringify(draft.sched.today||[]);
+    state["plan-"+dateKey(1)]=JSON.stringify(draft.sched.tomorrow||[]);
+  });
+  draft=null;tab="now";renderAll();
+}
+
+function renderStreak(){
+  const streak=state.streak||0;
+  const blocks=todayBlocks(),ck=checks();
+  const nnOk=blocks.length>0&&blocks.every((b,i)=>!b.nn||ck.includes(i));
+  const validated=!!state["valid-"+dayKey()];
+  document.getElementById("streakPill").textContent="J"+streak;
+  document.getElementById("v-streak").innerHTML=`
+    <div class="streak-hero"><div class="n">${streak}</div>
+      <span class="label">jours complets consécutifs</span></div>
+    <div style="padding:0 20px">
+      <button class="btn" ${(!nnOk||validated)?"disabled":""} onclick="validateDay()">
+        ${validated?"JOURNÉE VALIDÉE":nnOk?"VALIDER LA JOURNÉE":"BLOCS NN INCOMPLETS"}</button>
+    </div>
+    <div class="rules" style="margin-top:20px">
+      <b>JOUR COMPLET</b> = tous les blocs <b>NN</b> cochés.<br>
+      <b>JOUR RATÉ</b> = streak à zéro, +15 min de renfo le lendemain (max +45).<br>
+      Pas d'excuse. Pas de négociation.
+    </div>`;
+}
+function validateDay(){
+  mutate(()=>{
+    state["valid-"+dayKey()]=true;
+    state.streak=(state.streak||0)+1;
+  });
+}
+
+function renderAll(){
+  renderNav();renderNow();renderAgenda();renderNotes();renderWeek();renderProjects();renderWhy();
+  if(tab==="edit")renderEdit();else draft=null;
+  renderStreak();
+}
+boot();
+</script>
+</body>
+</html>

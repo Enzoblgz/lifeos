@@ -6,7 +6,7 @@ LifeOS est un launcher Android qui remplace ton écran d'accueil et **verrouille
 téléphone** pendant tes blocs de focus. Planning, notes, objectifs, streak — un seul système,
 synchronisé entre ton téléphone et ton PC.
 
-→ **[Télécharger l'APK](https://lifeos-focus.vercel.app/download/lifeos.apk)** · **[Version PC](https://lifeos-focus.vercel.app/app)** · **[Site](https://lifeos-focus.vercel.app)**
+→ **[Télécharger l'APK](https://enzoblgz.github.io/lifeos/download/lifeos.apk)** · **[Version PC](https://enzoblgz.github.io/lifeos/app/)** · **[Site](https://enzoblgz.github.io/lifeos/)**
 
 ---
 
@@ -30,16 +30,18 @@ d'honneur, qui coche le bloc automatiquement.
 
 | Couche | Rôle |
 |---|---|
-| **GitHub** | Code source (ce dépôt) |
-| **Vercel** | Site vitrine + interface PC (`web/`) |
+| **GitHub** | Code source + hébergement du site (**GitHub Pages**, dossier `docs/`) |
 | **Supabase** | Authentification, base de données, synchronisation d'état |
 
 ```
 android/   App native Kotlin + Jetpack Compose (le launcher)
-web/       Site public (index.html) + interface PC (app/) + APK (download/) — déployé sur Vercel
+docs/      Site public (index.html) + interface PC (app/) + APK (download/) — servi par GitHub Pages
 supabase/  Schéma SQL de la base
 sync/      Notes techniques de synchronisation
 ```
+
+Le site est publié par **GitHub Pages** depuis le dossier `docs/` de la branche `main`
+(Settings → Pages → Source : `main` / `/docs`) → https://enzoblgz.github.io/lifeos/
 
 ## Construire l'app
 
@@ -56,7 +58,7 @@ Min SDK 26 (Android 8.0). Voir `android/README.md` pour l'installation et les au
 
 Renseigner l'URL du projet et la clé **anon** (publique) dans :
 - `android/app/src/main/java/fr/bellenguez/lifeos/Supa.kt`
-- `web/app/index.html`
+- `docs/app/index.html`
 
 Créer une table `user_state (user_id uuid, data jsonb, updated_at timestamptz)` avec RLS par
 utilisateur. Voir `supabase/schema.sql`.
