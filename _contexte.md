@@ -45,12 +45,12 @@ Décision : LifeOS devient une plateforme type Instagram — comptes utilisateur
 - **LifeOS Launcher** : écran d'accueil Android minimaliste — heure, bloc en cours, apps épinglées en texte, dossiers, recherche. Activer via bouton home → LifeOS → Toujours
 
 ## État actuel
-13/07/2026 : **v1.1 en production.** App + launcher installés sur le téléphone (Samsung A17), Supabase branché (projet `mpivoorbztrqzfbwqlfb`), client web déployé : **https://lifeos-gamma-five.vercel.app**.
+13/07/2026 : **v1.1 en production.** App + launcher installés sur le téléphone (Samsung A17), Supabase branché (projet `mpivoorbztrqzfbwqlfb`), client web déployé : **https://lifeos-focus.vercel.app**.
 
 ## Roadmap
 - [x] Projet Supabase + schéma + clés branchées (Android + web)
 - [x] APK v1.0 réinstallé — reste : créer le compte Enzo dans l'app
-- [x] Web déployé sur Vercel → https://lifeos-gamma-five.vercel.app (sous-domaine enzo.bellenguez.fr à brancher plus tard)
+- [x] Web déployé sur Vercel → https://lifeos-focus.vercel.app (sous-domaine enzo.bellenguez.fr à brancher plus tard)
 - [ ] Tester le mode FOCUS en réel 1 semaine + remplir le POURQUOI + cocher la liste blanche
 - [ ] v1.1 : défauts génériques pour les nouveaux utilisateurs (l'emploi du temps d'Enzo ne doit pas être le template public)
 - [ ] v1.1 : médias du POURQUOI dans Supabase Storage (visibles sur le web)
@@ -70,7 +70,7 @@ Décision : LifeOS devient une plateforme type Instagram — comptes utilisateur
 
 **Architecture publique** (demande Enzo, « on développe au grand public ») :
 - **GitHub** = code source → dépôt **privé** `github.com/Enzoblgz/lifeos` (poussé). Privé par défaut = choix de divulgation réversible ; passer public avec `gh repo edit Enzoblgz/lifeos --visibility public` quand tu veux.
-- **Vercel** = site + interface PC → projet `lifeos`, déployé en prod. Domaine stable **lifeos-gamma-five.vercel.app**.
+- **Vercel** = site + interface PC → projet `lifeos`, déployé en prod. Domaine stable **lifeos-focus.vercel.app**.
 - **Supabase** = auth + base + sync (déjà en place, clé anon publique dans `Supa.kt` et `web/app/index.html`).
 
 **Restructuration du web** :
