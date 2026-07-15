@@ -1,0 +1,21 @@
+# ===== Build Android =====
+android/build/
+android/app/build/
+android/.gradle/
+android/.idea/
+android/local.properties
+android/app/release/
+*.keystore
+*.jks
+
+# ===== Artefacts APK/ZIP à la racine (le binaire distribuable vit dans web/download/) =====
+/*.apk
+/*.zip
+
+# ===== Vercel =====
+web/.vercel/
+
+# ===== OS / éditeurs =====
+.DS_Store
+*.swp
+Thumbs.db

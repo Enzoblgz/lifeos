@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
+<title>LIFEOS</title>
+<style>
+  :root{
+    --black:#000; --white:#fff;
+    --g1:#0a0a0a; --g2:#1a1a1a; --g3:#333; --g4:#666; --g5:#999;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}
+  html,body{background:var(--black);color:var(--white);height:100%}
+  body{max-width:560px;margin:0 auto;padding-bottom:64px;
+    -webkit-user-select:none;user-select:none}
+  input,textarea{-webkit-user-select:text;user-select:text}
+
+  /* ===== TYPO SYSTÈME ===== */
+  .label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--g4);font-weight:700}
+  .label-w{color:var(--white)}
+  hr.rule{border:none;border-top:1px solid var(--g2);margin:0}
+
+  /* ===== HEADER ===== */
+  header{display:flex;justify-content:space-between;align-items:center;
+    padding:18px 20px 14px;border-bottom:1px solid var(--g2)}
+  header .logo{font-size:15px;font-weight:900;letter-spacing:5px}
+  header .streak{font-size:12px;font-weight:700;letter-spacing:2px;color:var(--g5);
+    border:1px solid var(--g3);padding:4px 10px}
+
+  /* ===== VUES ===== */
+  .view{display:none}
+  .view.active{display:block}
+
+  /* ===== NOW ===== */
+  #now-hero{padding:36px 20px 30px;border-bottom:1px solid var(--g2)}
+  #now-hero .label{margin-bottom:14px}
+  #now-task{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.5px;
+    text-transform:uppercase;margin-bottom:10px}
+  #now-time{font-size:13px;color:var(--g5);letter-spacing:2px;font-variant-numeric:tabular-nums}
+  .btn{display:block;width:100%;background:var(--white);color:var(--black);border:none;
+    padding:18px;font-size:14px;font-weight:900;letter-spacing:4px;text-transform:uppercase;
+    cursor:pointer;margin-top:26px}
+  .btn:active{background:var(--g5)}
+  .btn.ghost{background:transparent;color:var(--white);border:1px solid var(--g3)}
+  .btn:disabled{background:var(--g2);color:var(--g4)}
+
+  /* ===== LISTE DU JOUR ===== */
+  .day-head{display:flex;justify-content:space-between;align-items:baseline;padding:22px 20px 10px}
+  .day-head .pct{font-size:12px;color:var(--g5);font-variant-numeric:tabular-nums;letter-spacing:1px}
+  .pbar{height:2px;background:var(--g2);margin:0 20px 6px}
+  .pbar div{height:100%;background:var(--white);width:0;transition:width .3s}
+  .block{display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid var(--g1);cursor:pointer}
+  .block .cb{width:20px;height:20px;border:1px solid var(--g4);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:transparent}
+  .block.done .cb{background:var(--white);border-color:var(--white);color:var(--black)}
+  .block .time{font-size:11px;color:var(--g4);width:74px;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .block .name{flex:1;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .block.done .name{color:var(--g4);text-decoration:line-through}
+  .block .tags{font-size:9px;letter-spacing:2px;color:var(--g4);font-weight:700}
+  .block .tags .nn{color:var(--white);border:1px solid var(--white);padding:1px 4px;margin-left:5px}
+  .block.current{background:var(--g1);border-left:3px solid var(--white)}
+
+  /* ===== FOCUS (verrouillage) ===== */
+  #focus{position:fixed;inset:0;background:var(--black);z-index:100;display:none;
+    flex-direction:column;justify-content:space-between;padding:28px 24px;
+    padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+  #focus.active{display:flex}
+  #focus .top{display:flex;justify-content:space-between;align-items:center}
+  #focus .escape{font-size:10px;letter-spacing:2px;color:var(--g4);font-weight:700}
+  #focus .escape.bad{color:var(--white)}
+  #focus .center{text-align:center}
+  #focus-task{font-size:44px;font-weight:900;line-height:1;letter-spacing:-1px;
+    text-transform:uppercase;margin:18px 0 14px;word-break:break-word}
+  #focus-range{font-size:13px;color:var(--g5);letter-spacing:3px;font-variant-numeric:tabular-nums}
+  #focus-timer{font-size:15px;color:var(--g4);letter-spacing:4px;margin-top:26px;
+    font-variant-numeric:tabular-nums;font-weight:700}
+  #focus .bottom{display:flex;flex-direction:column;gap:12px}
+  .focus-link{background:transparent;border:1px solid var(--g3);color:var(--g5);
+    padding:14px;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;width:100%}
+  .focus-link.main{border-color:var(--white);color:var(--white)}
+
+  /* ===== CERTIFICATION ===== */
+  #certif{position:fixed;inset:0;background:var(--black);z-index:120;display:none;
+    flex-direction:column;justify-content:center;padding:24px}
+  #certif.active{display:flex}
+  #certif h2{font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:1px;
+    line-height:1.2;margin:16px 0 8px}
+  #certif .oath{font-size:15px;color:var(--g5);line-height:1.5;margin:14px 0 22px;
+    border-left:2px solid var(--white);padding-left:14px;font-style:italic}
+  #certif input{width:100%;background:var(--g1);border:1px solid var(--g3);color:var(--white);
+    padding:16px;font-size:15px;outline:none}
+  #certif input:focus{border-color:var(--white)}
+  #certif .cancel{background:none;border:none;color:var(--g4);font-size:11px;
+    letter-spacing:2px;text-transform:uppercase;margin-top:18px;cursor:pointer;padding:10px;width:100%}
+
+  /* ===== POURQUOI ===== */
+  #why-view .head,#v-why .head{padding:22px 20px 6px}
+  .why-item{margin:14px 20px;border:1px solid var(--g2)}
+  .why-item .txt{padding:16px;font-size:16px;line-height:1.55;font-weight:500;white-space:pre-wrap}
+  .why-item img,.why-item video{width:100%;display:block;filter:grayscale(1) contrast(1.1)}
+  .why-item .del{width:100%;background:none;border:none;border-top:1px solid var(--g2);
+    color:var(--g4);font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:8px;cursor:pointer}
+  .why-add{display:flex;gap:8px;padding:16px 20px 30px}
+  .why-add button{flex:1;background:none;border:1px solid var(--g3);color:var(--g5);
+    padding:12px 4px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+  #why-overlay{position:fixed;inset:0;background:var(--black);z-index:110;display:none;
+    overflow-y:auto;padding-bottom:90px}
+  #why-overlay.active{display:block}
+  #why-overlay .close{position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+    width:100%;max-width:560px;background:var(--white);color:var(--black);border:none;
+    padding:18px;font-size:13px;font-weight:900;letter-spacing:4px;text-transform:uppercase;cursor:pointer}
+  .empty{padding:34px 20px;color:var(--g4);font-size:13px;line-height:1.6;text-align:center}
+
+  /* ===== SEMAINE ===== */
+  .goal{padding:16px 20px;border-bottom:1px solid var(--g1)}
+  .goal .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .goal .top b{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+  .goal .late{font-size:9px;letter-spacing:2px;border:1px solid var(--white);padding:1px 5px;margin-left:8px}
+  .goal .q{font-size:12px;color:var(--g5);font-variant-numeric:tabular-nums}
+  .goal .row{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .goal .row button{width:40px;height:32px;background:none;border:1px solid var(--g3);
+    color:var(--white);font-size:16px;cursor:pointer}
+  .goal .row span{font-size:11px;color:var(--g4);letter-spacing:1px}
+
+  /* ===== PROJETS ===== */
+  .proj{padding:16px 20px;border-bottom:1px solid var(--g1)}
+  .proj .h{display:flex;justify-content:space-between;align-items:baseline}
+  .proj .h b{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+  .proj .h .st{font-size:9px;letter-spacing:2px;color:var(--g4);font-weight:700;text-transform:uppercase}
+  .proj .h .st.alert{color:var(--white);border:1px solid var(--white);padding:1px 5px}
+  .proj .next{font-size:13px;color:var(--g5);margin-top:6px;line-height:1.4}
+  .proj .c{font-size:9px;letter-spacing:2px;color:var(--g4);margin-top:6px;text-transform:uppercase}
+
+  /* ===== STREAK ===== */
+  .streak-hero{text-align:center;padding:52px 20px 26px}
+  .streak-hero .n{font-size:110px;font-weight:900;line-height:1;letter-spacing:-4px}
+  .streak-hero .l{margin-top:12px}
+  .rules{margin:10px 20px 30px;border:1px solid var(--g2);padding:18px;
+    font-size:13px;color:var(--g5);line-height:1.7}
+  .rules b{color:var(--white)}
+
+  /* ===== NAV ===== */
+  nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;
+    display:flex;background:var(--black);border-top:1px solid var(--g2);z-index:50;
+    padding-bottom:env(safe-area-inset-bottom)}
+  nav button{flex:1;background:none;border:none;color:var(--g4);padding:16px 0;
+    font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+  nav button.active{color:var(--white);border-top:2px solid var(--white);margin-top:-1px}
+
+  /* ===== MODAL PIN ===== */
+  #pin-help{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:130;display:none;
+    padding:40px 24px;overflow-y:auto}
+  #pin-help.active{display:block}
+  #pin-help h3{font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px}
+  #pin-help ol{margin:0 0 24px 18px;font-size:14px;color:var(--g5);line-height:1.9}
+  #pin-help b{color:var(--white)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LIFEOS</div>
+  <div class="streak" id="streakPill">J0</div>
+</header>
+
+<!-- ============ NOW ============ -->
+<div class="view active" id="v-now">
+  <div id="now-hero">
+    <div class="label" id="now-label">MAINTENANT</div>
+    <div id="now-task">—</div>
+    <div id="now-time"></div>
+    <button class="btn" id="focusBtn" onclick="enterFocus()">ENTRER EN FOCUS</button>
+    <button class="btn ghost" style="margin-top:10px" onclick="document.getElementById('pin-help').classList.add('active')">VERROUILLER LE TÉLÉPHONE</button>
+  </div>
+  <div class="day-head">
+    <span class="label">Aujourd'hui</span>
+    <span class="pct" id="dayPct">0%</span>
+  </div>
+  <div class="pbar"><div id="dayFill"></div></div>
+  <div id="blocks"></div>
+</div>
+
+<!-- ============ SEMAINE ============ -->
+<div class="view" id="v-week">
+  <div class="day-head"><span class="label">Objectifs — semaine en cours</span></div>
+  <div id="goals"></div>
+</div>
+
+<!-- ============ PROJETS ============ -->
+<div class="view" id="v-projects">
+  <div class="day-head"><span class="label">Projets actifs</span></div>
+  <div id="projects"></div>
+</div>
+
+<!-- ============ POURQUOI (éditeur) ============ -->
+<div class="view" id="v-why">
+  <div class="day-head"><span class="label">Pourquoi — arsenal de motivation</span></div>
+  <div id="why-list"></div>
+  <div class="why-add">
+    <button onclick="addWhyText()">+ TEXTE</button>
+    <button onclick="document.getElementById('imgInput').click()">+ IMAGE</button>
+    <button onclick="document.getElementById('vidInput').click()">+ VIDÉO</button>
+  </div>
+  <input type="file" id="imgInput" accept="image/*" hidden onchange="addWhyMedia(this,'img')">
+  <input type="file" id="vidInput" accept="video/*" hidden onchange="addWhyMedia(this,'vid')">
+</div>
+
+<!-- ============ STREAK ============ -->
+<div class="view" id="v-streak">
+  <div class="streak-hero">
+    <div class="n" id="streakBig">0</div>
+    <div class="l label">jours complets consécutifs</div>
+  </div>
+  <button class="btn" id="valideBtn" style="width:calc(100% - 40px);margin:0 20px 20px" onclick="valider()">VALIDER LA JOURNÉE</button>
+  <div class="rules">
+    <b>JOUR COMPLET</b> = tous les blocs <b>NN</b> cochés.<br>
+    <b>JOUR RATÉ</b> = streak à zéro. +15 min de renfo le lendemain. Cumul max +45 min.<br>
+    Pas d'excuse. Pas de négociation.
+  </div>
+</div>
+
+<!-- ============ FOCUS OVERLAY ============ -->
+<div id="focus">
+  <div class="top">
+    <span class="label label-w">FOCUS VERROUILLÉ</span>
+    <span class="escape" id="escapeCount">FUITES : 0</span>
+  </div>
+  <div class="center">
+    <div class="label" id="focus-label">TÂCHE EN COURS</div>
+    <div id="focus-task"></div>
+    <div id="focus-range"></div>
+    <div id="focus-timer">00:00</div>
+  </div>
+  <div class="bottom">
+    <button class="focus-link" onclick="openWhyOverlay()">VOIR POURQUOI</button>
+    <button class="focus-link main" onclick="openCertif()">J'AI TERMINÉ</button>
+  </div>
+</div>
+
+<!-- ============ POURQUOI OVERLAY (lecture seule, pendant focus) ============ -->
+<div id="why-overlay">
+  <div class="day-head"><span class="label label-w">Pourquoi tu fais ça</span></div>
+  <div id="why-list-ro"></div>
+  <button class="close" onclick="document.getElementById('why-overlay').classList.remove('active')">RETOUR AU TRAVAIL</button>
+</div>
+
+<!-- ============ CERTIFICATION ============ -->
+<div id="certif">
+  <div class="label">Certification sur l'honneur</div>
+  <h2 id="certif-task"></h2>
+  <div class="oath">« Je certifie sur l'honneur avoir accompli cette tâche. »</div>
+  <div class="label" style="margin-bottom:8px">Recopie la phrase exacte pour déverrouiller</div>
+  <input type="text" id="certif-input" autocomplete="off" autocapitalize="off" spellcheck="false"
+    placeholder="Je certifie…" oninput="checkOath()">
+  <button class="btn" id="certif-btn" disabled onclick="certify()">CERTIFIER ET DÉVERROUILLER</button>
+  <button class="cancel" onclick="closeCertif()">Je n'ai pas terminé — retour au travail</button>
+</div>
+
+<!-- ============ AIDE VERROUILLAGE ============ -->
+<div id="pin-help">
+  <h3>Verrouillage total du téléphone</h3>
+  <ol>
+    <li>Installe LifeOS : Chrome → menu → <b>Ajouter à l'écran d'accueil</b></li>
+    <li>Active l'épinglage : Paramètres → Sécurité → <b>Épinglage d'application</b> → ON + demander le code avant de désépingler</li>
+    <li>Ouvre LifeOS, entre en FOCUS, ouvre les apps récentes → icône LifeOS → <b>Épingler</b></li>
+  </ol>
+  <div style="font-size:13px;color:var(--g5);line-height:1.7;margin-bottom:24px">
+    Le téléphone est alors <b style="color:var(--white)">physiquement bloqué</b> sur cette app :
+    impossible d'ouvrir autre chose sans déverrouiller avec ton code.
+    La règle : tu ne désépingles qu'après avoir certifié sur l'honneur.
+  </div>
+  <button class="btn" onclick="document.getElementById('pin-help').classList.remove('active')">COMPRIS</button>
+</div>
+
+<nav id="mainNav">
+  <button class="active" onclick="show('now',this)">Now</button>
+  <button onclick="show('week',this)">Semaine</button>
+  <button onclick="show('projects',this)">Projets</button>
+  <button onclick="show('why',this)">Pourquoi</button>
+  <button onclick="show('streak',this)">Streak</button>
+</nav>
+
+<script>
+/* ================= DONNÉES — ÉTÉ 2026 (source : vault para/) ================= */
+const SEASON = {
+  weekday: [
+    {t:"06h15–07h00", n:"Routine matin", c:"athlète", nn:1},
+    {t:"07h00–12h30", n:"Boulot été", c:"businessman", nn:1},
+    {t:"12h30–13h45", n:"Repas + décompression", c:"perso"},
+    {t:"14h00–16h00", n:"Prépa — maths / physique", c:"étudiant"},
+    {t:"16h30–17h30", n:"Gustos ou Insta", c:"businessman"},
+    {t:"18h00–19h00", n:"Sport", c:"athlète", nn:1},
+    {t:"19h00–20h00", n:"Repas", c:"perso"},
+    {t:"20h30–21h30", n:"Lecture", c:"learner"},
+    {t:"22h00–22h15", n:"Bilan du jour", c:"perso", nn:1},
+  ],
+  saturday: [
+    {t:"08h00–09h00", n:"Routine matin + lessive 1", c:"perso", nn:1},
+    {t:"09h00–12h00", n:"Prépa — bloc long", c:"étudiant"},
+    {t:"13h30–15h30", n:"Running / séance longue", c:"athlète", nn:1},
+    {t:"16h00–17h00", n:"Lessive 2", c:"perso"},
+    {t:"17h00–18h30", n:"Gustos / Insta", c:"businessman"},
+    {t:"20h00–21h30", n:"Deep Work", c:"businessman", nn:1},
+    {t:"22h00–22h15", n:"Bilan du jour", c:"perso", nn:1},
+  ],
+  sunday: [
+    {t:"09h00–10h00", n:"Routine matin", c:"perso", nn:1},
+    {t:"10h00–12h00", n:"Natation + Running", c:"athlète", nn:1},
+    {t:"14h00–17h00", n:"Prépa", c:"étudiant"},
+    {t:"17h30–18h30", n:"Lecture", c:"learner"},
+    {t:"19h50–20h20", n:"Weekly Reset", c:"perso", nn:1},
+    {t:"20h20–21h30", n:"Deep Work", c:"businessman", nn:1},
+  ]
+};
+const GOALS = [
+  {n:"Séances sport", q:6, u:"séances"},
+  {n:"Prépa prépa", q:10, u:"h"},
+  {n:"Gustos / Insta", q:4, u:"sessions"},
+  {n:"Lecture", q:4, u:"h"},
+  {n:"Jours complets", q:6, u:"jours"},
+];
+const PROJECTS = [
+  {n:"Prépa prépa", c:"étudiant", alert:0, next:"Programme maths sup — chapitre en cours"},
+  {n:"Boulot été", c:"businessman", alert:0, next:"7h00–12h30 lun-ven, jusqu'au 15/08"},
+  {n:"Permis de conduire", c:"étudiant", alert:1, next:"Aucune leçon programmée — appeler l'auto-école"},
+  {n:"Gustos", c:"businessman", alert:0, next:"20 users fin d'été — diffusion"},
+  {n:"Exploration Insta", c:"businessman", alert:0, next:"Prochain post — valeur + abonnés"},
+  {n:"Thaïlande", c:"voyageur", alert:0, next:"Dates + billets avec papa — décembre"},
+];
+const OATH = "je certifie sur l'honneur avoir accompli cette tâche";
+
+/* ================= ÉTAT ================= */
+const todayKey = new Date().toISOString().slice(0,10);
+const S = JSON.parse(localStorage.getItem("lifeos2")||"{}");
+S.days = S.days||{}; S.days[todayKey] = S.days[todayKey]||{checks:{},validated:false};
+S.goals = (S.goals && S.goals.week===weekKey()) ? S.goals : {week:weekKey(),done:GOALS.map(()=>0)};
+S.streak = S.streak||0;
+S.focus = S.focus||null; // {idx, start, escapes} — persiste si l'app est rechargée
+function save(){localStorage.setItem("lifeos2",JSON.stringify(S))}
+function weekKey(){const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));return d.toISOString().slice(0,10)}
+
+const dow = new Date().getDay();
+const blocks = dow===0 ? SEASON.sunday : dow===6 ? SEASON.saturday : SEASON.weekday;
+
+/* ================= BLOC COURANT ================= */
+function parseRange(t){
+  return t.split("–").map(s=>{const p=s.split("h");return (+p[0])*60+(+(p[1]||0))});
+}
+function currentBlockIdx(){
+  const now = new Date().getHours()*60+new Date().getMinutes();
+  for(let i=0;i<blocks.length;i++){
+    const [a,b]=parseRange(blocks[i].t);
+    if(now>=a && now<b) return {idx:i,mode:"now"};
+  }
+  for(let i=0;i<blocks.length;i++){
+    const [a]=parseRange(blocks[i].t);
+    if(a>now) return {idx:i,mode:"next"};
+  }
+  return {idx:-1,mode:"done"};
+}
+
+/* ================= RENDER NOW ================= */
+function renderNow(){
+  const cur = currentBlockIdx();
+  const lbl = document.getElementById("now-label");
+  const task = document.getElementById("now-task");
+  const time = document.getElementById("now-time");
+  const btn = document.getElementById("focusBtn");
+  if(cur.mode==="done"){
+    lbl.textContent="JOURNÉE TERMINÉE";
+    task.textContent="REPOS.";
+    time.textContent="";
+    btn.disabled=true;
+  }else{
+    lbl.textContent = cur.mode==="now" ? "MAINTENANT" : "PROCHAIN BLOC";
+    task.textContent = blocks[cur.idx].n;
+    time.textContent = blocks[cur.idx].t + "  ·  " + blocks[cur.idx].c.toUpperCase();
+    btn.disabled=false;
+  }
+}
+function renderBlocks(){
+  const cur = currentBlockIdx();
+  const el = document.getElementById("blocks");
+  el.innerHTML = blocks.map((b,i)=>{
+    const done = S.days[todayKey].checks[i];
+    return `<div class="block ${done?'done':''} ${cur.mode==='now'&&cur.idx===i?'current':''}" onclick="toggle(${i})">
+      <div class="cb">✕</div>
+      <div class="time">${b.t}</div>
+      <div class="name">${b.n}</div>
+      <div class="tags">${b.c.toUpperCase()}${b.nn?'<span class="nn">NN</span>':''}</div>
+    </div>`}).join("");
+  const done = Object.values(S.days[todayKey].checks).filter(Boolean).length;
+  document.getElementById("dayFill").style.width=(100*done/blocks.length)+"%";
+  document.getElementById("dayPct").textContent=Math.round(100*done/blocks.length)+"%";
+  const nnOk = blocks.every((b,i)=>!b.nn||S.days[todayKey].checks[i]);
+  const vb = document.getElementById("valideBtn");
+  vb.disabled = !nnOk || S.days[todayKey].validated;
+  vb.textContent = S.days[todayKey].validated ? "JOURNÉE VALIDÉE"
+    : nnOk ? "VALIDER LA JOURNÉE" : "BLOCS NN INCOMPLETS";
+}
+function toggle(i){
+  if(S.focus) return; // pas de triche pendant le focus
+  S.days[todayKey].checks[i]=!S.days[todayKey].checks[i];
+  save(); renderBlocks();
+}
+function valider(){
+  S.days[todayKey].validated=true; S.streak++;
+  save(); renderStreak(); renderBlocks();
+}
+
+/* ================= FOCUS ================= */
+let wakeLock=null, timerInt=null;
+async function enterFocus(){
+  const cur = currentBlockIdx();
+  if(cur.idx<0) return;
+  S.focus = S.focus || {idx:cur.idx, start:Date.now(), escapes:0};
+  save();
+  showFocusUI();
+  try{ await document.documentElement.requestFullscreen({navigationUI:"hide"}) }catch(e){}
+  try{ wakeLock = await navigator.wakeLock.request("screen") }catch(e){}
+}
+function showFocusUI(){
+  const b = blocks[S.focus.idx];
+  document.getElementById("focus-task").textContent=b.n;
+  document.getElementById("focus-range").textContent=b.t;
+  document.getElementById("focus").classList.add("active");
+  updateEscapes();
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{
+    const s=Math.floor((Date.now()-S.focus.start)/1000);
+    const h=Math.floor(s/3600), m=Math.floor(s%3600/60), sec=s%60;
+    document.getElementById("focus-timer").textContent=
+      (h?String(h).padStart(2,"0")+":":"")+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
+  },1000);
+}
+function updateEscapes(){
+  const e=document.getElementById("escapeCount");
+  e.textContent="FUITES : "+S.focus.escapes;
+  e.classList.toggle("bad",S.focus.escapes>0);
+}
+document.addEventListener("visibilitychange",()=>{
+  if(S.focus && document.hidden){ S.focus.escapes++; save(); }
+  if(S.focus && !document.hidden){ updateEscapes(); }
+});
+
+/* ================= CERTIFICATION ================= */
+function openCertif(){
+  document.getElementById("certif-task").textContent=blocks[S.focus.idx].n;
+  document.getElementById("certif-input").value="";
+  document.getElementById("certif-btn").disabled=true;
+  document.getElementById("certif").classList.add("active");
+}
+function closeCertif(){ document.getElementById("certif").classList.remove("active") }
+function normalize(s){
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .replace(/[’']/g,"'").replace(/[.\s]+/g," ").trim();
+}
+function checkOath(){
+  const ok = normalize(document.getElementById("certif-input").value)===normalize(OATH);
+  document.getElementById("certif-btn").disabled=!ok;
+}
+function certify(){
+  S.days[todayKey].checks[S.focus.idx]=true;
+  S.focus=null; save();
+  clearInterval(timerInt);
+  if(wakeLock){wakeLock.release().catch(()=>{});wakeLock=null}
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  closeCertif();
+  document.getElementById("focus").classList.remove("active");
+  renderNow(); renderBlocks();
+}
+
+/* ================= POURQUOI (IndexedDB pour les médias) ================= */
+let idb=null;
+const idbReady = new Promise(res=>{
+  const rq=indexedDB.open("lifeos-why",1);
+  rq.onupgradeneeded=e=>e.target.result.createObjectStore("items",{keyPath:"id",autoIncrement:true});
+  rq.onsuccess=e=>{idb=e.target.result;res()};
+  rq.onerror=()=>res();
+});
+function whyTx(mode){return idb.transaction("items",mode).objectStore("items")}
+function loadWhy(){
+  if(!idb) return;
+  const out=[]; whyTx("readonly").openCursor().onsuccess=e=>{
+    const c=e.target.result;
+    if(c){out.push(c.value);c.continue()}
+    else renderWhy(out);
+  };
+}
+function renderWhy(items){
+  const html = items.length ? items.map(it=>{
+    let body="";
+    if(it.type==="txt") body=`<div class="txt">${esc(it.text)}</div>`;
+    if(it.type==="img") body=`<img src="${URL.createObjectURL(it.blob)}">`;
+    if(it.type==="vid") body=`<video src="${URL.createObjectURL(it.blob)}" controls playsinline></video>`;
+    return {id:it.id, body};
+  }) : null;
+  document.getElementById("why-list").innerHTML = html
+    ? html.map(h=>`<div class="why-item">${h.body}<button class="del" onclick="delWhy(${h.id})">Supprimer</button></div>`).join("")
+    : `<div class="empty">Vide. Ajoute ce qui te rappelle pourquoi tu te lèves à 6h15 :<br>textes, images, vidéos. Ton futur toi en focus les verra.</div>`;
+  document.getElementById("why-list-ro").innerHTML = html
+    ? html.map(h=>`<div class="why-item">${h.body}</div>`).join("")
+    : `<div class="empty">Aucun contenu. Sors du focus honnêtement, puis remplis ton POURQUOI.</div>`;
+}
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function addWhyText(){
+  const t=prompt("Ton texte de motivation :");
+  if(!t) return;
+  whyTx("readwrite").add({type:"txt",text:t}).onsuccess=loadWhy;
+}
+function addWhyMedia(input,type){
+  const f=input.files[0]; if(!f) return;
+  whyTx("readwrite").add({type,blob:f}).onsuccess=loadWhy;
+  input.value="";
+}
+function delWhy(id){ whyTx("readwrite").delete(id).onsuccess=loadWhy }
+function openWhyOverlay(){ document.getElementById("why-overlay").classList.add("active") }
+
+/* ================= SEMAINE ================= */
+function renderGoals(){
+  const daysLeft = 7-((new Date().getDay()+6)%7);
+  document.getElementById("goals").innerHTML = GOALS.map((g,i)=>{
+    const d=S.goals.done[i], reste=g.q-d;
+    const late = reste > daysLeft*(g.q/7)*1.3;
+    return `<div class="goal">
+      <div class="top"><b>${g.n}${late?'<span class="late">RETARD</span>':''}</b>
+        <span class="q">${d} / ${g.q} ${g.u}</span></div>
+      <div class="pbar" style="margin:0"><div style="width:${Math.min(100,100*d/g.q)}%"></div></div>
+      <div class="row">
+        <button onclick="bump(${i},-1)">−</button>
+        <button onclick="bump(${i},1)">+</button>
+        <span>${reste>0?"RESTE "+reste+" "+g.u.toUpperCase()+" · "+daysLeft+" J":"QUOTA ATTEINT"}</span>
+      </div></div>`}).join("");
+}
+function bump(i,d){S.goals.done[i]=Math.max(0,S.goals.done[i]+d);save();renderGoals()}
+
+/* ================= PROJETS ================= */
+document.getElementById("projects").innerHTML = PROJECTS.map(p=>`
+  <div class="proj">
+    <div class="h"><b>${p.n}</b><span class="st ${p.alert?'alert':''}">${p.alert?'ACTION REQUISE':'ACTIF'}</span></div>
+    <div class="next">${p.next}</div>
+    <div class="c">${p.c}</div>
+  </div>`).join("");
+
+/* ================= STREAK / NAV / BOOT ================= */
+function renderStreak(){
+  document.getElementById("streakPill").textContent="J"+S.streak;
+  document.getElementById("streakBig").textContent=S.streak;
+}
+function show(v,btn){
+  if(S.focus) return; // navigation verrouillée pendant le focus
+  document.querySelectorAll(".view").forEach(e=>e.classList.remove("active"));
+  document.getElementById("v-"+v).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
+save(); renderNow(); renderBlocks(); renderGoals(); renderStreak();
+idbReady.then(loadWhy);
+setInterval(()=>{renderNow();if(!S.focus)renderBlocks()},60000);
+if(S.focus) showFocusUI(); // focus interrompu par un rechargement → on y retourne
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <long name="focus_start" value="1783940029034" />
+    <int name="focus_idx" value="2" />
+    <set name="checks-2026-07-13" />
+    <string name="sess_access">eyJhbGciOiJFUzI1NiIsImtpZCI6ImI3YzM4NGYwLTYyMDQtNDBjOC1hYWI0LWNiZDYzYWY3Mzg1ZCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL21waXZvb3JienRycXpmYndxbGZiLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NjZiNjk4Zi1mMTVmLTQ5NWItOGMzNy1kMzZjYmJkMjkxNzAiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzgzOTQ0OTM1LCJpYXQiOjE3ODM5NDEzMzUsImVtYWlsIjoiZW56by5iZWxsZW5ndWV6QGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJlbnpvLmJlbGxlbmd1ZXpAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwic3ViIjoiOTY2YjY5OGYtZjE1Zi00OTViLThjMzctZDM2Y2JiZDI5MTcwIn0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3ODM5NDEzMzV9XSwic2Vzc2lvbl9pZCI6IjM0ODgzNmY0LTM1YjQtNGYyMi1hZjUyLTRiYTcxYjJlNjkyOSIsImlzX2Fub255bW91cyI6ZmFsc2V9.qhH9UBMXc873_yhVKl_M7-k8QnALVJSy8Gg3rnmpOFByZzwPNIOghnGfsql99JyBmeVj8VFQpEM9-e7wPJDwfg</string>
+    <int name="focus_escapes" value="1" />
+    <boolean name="focus_active" value="false" />
+    <string name="sess_uid">966b698f-f15f-495b-8c37-d36cbbd29170</string>
+    <string name="why">[{&quot;type&quot;:&quot;vid&quot;,&quot;uri&quot;:&quot;content:\/\/com.google.android.apps.docs.storage\/document\/acc%3D1%3Bdoc%3Dencoded%3DWn5uUAa17Qi_X-4f1YR74qsje8jOBG33sqvlMXbvsZYyOU-8fo797ghPVk4P_g%3D%3D&quot;},{&quot;type&quot;:&quot;vid&quot;,&quot;uri&quot;:&quot;content:\/\/com.google.android.apps.docs.storage\/document\/acc%3D1%3Bdoc%3Dencoded%3DCRmhmVwT1xWRC_evvdoFlK5LcCyS1gek9UtIt9FTw2QZfz-6y9jeHok_hxO5Ug%3D%3D&quot;},{&quot;type&quot;:&quot;vid&quot;,&quot;uri&quot;:&quot;content:\/\/com.google.android.apps.docs.storage\/document\/acc%3D1%3Bdoc%3Dencoded%3DqNTbm-3PvwSDmzJ8DXjYoH01U6gf9ZIULH-6hwSEzkwJeCbLp5hpq3BxAVFSQg%3D%3D&quot;}]</string>
+    <string name="sess_refresh">ugdmjgerc62i</string>
+</map>

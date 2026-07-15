@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeOS — Ton téléphone te sert. Pas l'inverse.</title>
+<meta name="description" content="LifeOS remplace ton écran d'accueil Android et verrouille ton téléphone pendant tes blocs de focus. Planning, notes, objectifs, streak — un seul système, sur ton téléphone et ton PC.">
+<meta property="og:title" content="LifeOS — Reprends le contrôle de ton téléphone">
+<meta property="og:description" content="Le launcher Android qui verrouille ton téléphone quand tu dois te concentrer. Gratuit.">
+<meta property="og:type" content="website">
+<style>
+  /* ===== LifeOS — un seul monde visuel : noir & blanc, aucune couleur.
+     C'est la philosophie du produit (discipline, zéro distraction), pas un oubli.
+     Thème unique assumé. ===== */
+  :root{
+    --black:#000; --white:#fff;
+    --g1:#0a0a0a; --g2:#161616; --g3:#333; --g4:#666; --g5:#999;
+    --maxw:1060px;
+    --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--black); color:var(--white); font-family:var(--sans);
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  .label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--g4);font-weight:700}
+
+  /* ----- Boutons / CTA ----- */
+  .cta{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    background:var(--white);color:var(--black);border:1px solid var(--white);
+    padding:16px 26px;font-size:13px;font-weight:900;letter-spacing:3px;
+    text-transform:uppercase;cursor:pointer;transition:transform .12s ease,opacity .12s ease;
+    text-align:center;
+  }
+  .cta:hover{transform:translateY(-2px)}
+  .cta:active{transform:translateY(0)}
+  .cta.ghost{background:transparent;color:var(--white);border-color:var(--g3)}
+  .cta.ghost:hover{border-color:var(--white)}
+  .cta .sz{font-size:9px;letter-spacing:2px;color:var(--g4);font-weight:700}
+  .cta.ghost .sz{color:var(--g5)}
+
+  /* ----- Nav ----- */
+  nav{
+    position:sticky;top:0;z-index:50;background:rgba(0,0,0,.82);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--g2);
+  }
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  nav .logo{font-size:16px;font-weight:900;letter-spacing:6px}
+  nav .navlinks{display:flex;align-items:center;gap:28px}
+  nav .navlinks a{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--g5);font-weight:700}
+  nav .navlinks a:hover{color:var(--white)}
+  nav .cta{padding:11px 18px;font-size:11px}
+  @media(max-width:720px){ nav .navlinks a.hide-sm{display:none} }
+
+  /* ----- Sections ----- */
+  section{border-bottom:1px solid var(--g2)}
+  .pad{padding:96px 0}
+  .eyebrow{color:var(--g5);margin-bottom:20px}
+  h1,h2,h3{text-wrap:balance;letter-spacing:-.02em;font-weight:900;line-height:1.02}
+  h1{font-size:clamp(40px,7vw,78px)}
+  h2{font-size:clamp(30px,4.6vw,52px)}
+  h3{font-size:20px;letter-spacing:0}
+  .lead{font-size:clamp(16px,2vw,20px);color:var(--g5);max-width:56ch;line-height:1.55}
+
+  /* ----- Hero ----- */
+  .hero{position:relative;overflow:hidden}
+  .hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;
+    padding-top:80px;padding-bottom:96px}
+  .hero h1 span{color:var(--g4)}
+  .hero .lead{margin:26px 0 34px}
+  .hero .ctarow{display:flex;gap:14px;flex-wrap:wrap}
+  .hero .meta{margin-top:26px;display:flex;gap:22px;flex-wrap:wrap}
+  .hero .meta div{font-size:11px;letter-spacing:1px;color:var(--g4)}
+  .hero .meta b{color:var(--white);font-weight:700}
+  @media(max-width:860px){
+    .hero .wrap{grid-template-columns:1fr;gap:48px}
+    .phone-wrap{order:-1;justify-self:center}
+  }
+
+  /* ----- Maquette téléphone (l'écran d'accueil réel de LifeOS) ----- */
+  .phone-wrap{justify-self:end}
+  .phone{
+    width:264px;border:2px solid var(--g3);border-radius:34px;background:var(--black);
+    padding:22px 18px 16px;box-shadow:0 0 0 8px #0c0c0c, 0 30px 80px rgba(0,0,0,.9);
+  }
+  .phone .top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+  .phone .clock{font-size:44px;font-weight:900;letter-spacing:1px;line-height:1;font-variant-numeric:tabular-nums}
+  .phone .date{font-size:8px;letter-spacing:2px;color:var(--g4);font-weight:700;text-transform:uppercase;margin-top:4px}
+  .phone .streak{font-size:9px;font-weight:900;letter-spacing:1px;border:1px solid var(--g4);padding:5px 8px}
+  .phone .cur{font-size:11px;font-weight:700;letter-spacing:1px;margin:8px 0 10px}
+  .phone .enter{border:1px solid var(--white);text-align:center;font-size:8px;font-weight:700;
+    letter-spacing:3px;padding:9px;margin-bottom:16px}
+  .phone .bl{display:flex;align-items:center;gap:9px;padding:6px 0}
+  .phone .box{width:13px;height:13px;flex-shrink:0;border:1px solid var(--g4)}
+  .phone .box.on{background:var(--white);border-color:var(--white);position:relative}
+  .phone .box.on::after{content:"✕";position:absolute;inset:0;color:#000;font-size:8px;font-weight:900;
+    display:flex;align-items:center;justify-content:center}
+  .phone .bt{font-size:8px;color:var(--g4);width:34px;font-variant-numeric:tabular-nums}
+  .phone .bn{font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;flex:1}
+  .phone .bl.done .bn{color:var(--g4);text-decoration:line-through}
+  .phone .nn{font-size:6px;font-weight:700;letter-spacing:1px;border:1px solid var(--white);padding:1px 3px}
+  .phone .tabs{display:flex;justify-content:space-between;margin-top:16px;border-top:1px solid var(--g2);padding-top:12px}
+  .phone .tabs span{font-size:7px;letter-spacing:1px;color:var(--g4);font-weight:700}
+
+  /* ----- Bandeau problème ----- */
+  .prob h2{max-width:20ch}
+  .prob .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:56px;
+    background:var(--g2);border:1px solid var(--g2)}
+  .prob .stat{background:var(--black);padding:32px 24px}
+  .prob .stat .n{font-size:clamp(32px,5vw,48px);font-weight:900;letter-spacing:-.02em}
+  .prob .stat .t{font-size:13px;color:var(--g5);margin-top:8px;line-height:1.5}
+  @media(max-width:720px){ .prob .stat-row{grid-template-columns:1fr} }
+
+  /* ----- Focus (la thèse) ----- */
+  .focus{background:var(--white);color:var(--black)}
+  .focus .eyebrow{color:var(--g4)}
+  .focus h2{max-width:16ch}
+  .focus .lead{color:#333}
+  .focus .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:64px;
+    background:#e2e2e2;border:1px solid #e2e2e2}
+  .focus .step{background:var(--white);padding:28px 22px}
+  .focus .step .k{font-size:11px;font-weight:900;letter-spacing:2px;color:var(--g4)}
+  .focus .step h3{margin:16px 0 10px;font-size:17px}
+  .focus .step p{font-size:13px;color:#444;line-height:1.55}
+  .focus .oath{margin-top:56px;border:1px solid #000;padding:28px 26px;display:flex;
+    gap:22px;align-items:center;flex-wrap:wrap}
+  .focus .oath .q{font-size:clamp(16px,2.4vw,22px);font-weight:700;flex:1;min-width:260px}
+  .focus .oath .n{font-size:11px;letter-spacing:2px;color:var(--g4);font-weight:700;text-transform:uppercase}
+  @media(max-width:820px){ .focus .steps{grid-template-columns:1fr 1fr} }
+  @media(max-width:480px){ .focus .steps{grid-template-columns:1fr} }
+
+  /* ----- Grille de fonctionnalités ----- */
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:60px;
+    background:var(--g2);border:1px solid var(--g2)}
+  .feat{background:var(--black);padding:36px 30px;min-height:230px}
+  .feat .mk{font-size:11px;font-weight:900;letter-spacing:2px;color:var(--g4)}
+  .feat h3{margin:18px 0 12px}
+  .feat p{font-size:14px;color:var(--g5);line-height:1.6}
+  @media(max-width:860px){ .feat-grid{grid-template-columns:1fr 1fr} }
+  @media(max-width:560px){ .feat-grid{grid-template-columns:1fr} }
+
+  /* ----- Launcher ----- */
+  .launcher .wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+  .launcher ul{list-style:none;margin-top:28px;display:flex;flex-direction:column;gap:2px}
+  .launcher li{display:flex;gap:14px;padding:16px 0;border-top:1px solid var(--g2);font-size:15px;color:var(--g5)}
+  .launcher li b{color:var(--white);font-weight:700}
+  .launcher li .x{color:var(--white);font-weight:900}
+  @media(max-width:820px){ .launcher .wrap{grid-template-columns:1fr;gap:32px} }
+
+  /* ----- Installation ----- */
+  .install .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:56px;
+    background:var(--g2);border:1px solid var(--g2)}
+  .install .step{background:var(--black);padding:34px 28px}
+  .install .step .k{font-size:44px;font-weight:900;letter-spacing:-.03em;color:var(--g3);line-height:1}
+  .install .step h3{margin:20px 0 12px;font-size:18px}
+  .install .step p{font-size:14px;color:var(--g5);line-height:1.6}
+  .install .step p b{color:var(--white)}
+  @media(max-width:720px){ .install .steps{grid-template-columns:1fr} }
+
+  /* ----- FAQ ----- */
+  .faq details{border-top:1px solid var(--g2)}
+  .faq details:last-child{border-bottom:1px solid var(--g2)}
+  .faq summary{list-style:none;cursor:pointer;padding:26px 0;display:flex;justify-content:space-between;
+    align-items:center;gap:20px;font-size:clamp(16px,2vw,20px);font-weight:700}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary .plus{font-size:22px;font-weight:400;color:var(--g4);transition:transform .2s}
+  .faq details[open] summary .plus{transform:rotate(45deg);color:var(--white)}
+  .faq .a{padding:0 0 28px;color:var(--g5);font-size:15px;line-height:1.7;max-width:64ch}
+  .faq .a a{color:var(--white);text-decoration:underline;text-underline-offset:3px}
+
+  /* ----- CTA final ----- */
+  .final{text-align:center}
+  .final h2{max-width:18ch;margin:0 auto 22px}
+  .final .lead{margin:0 auto 40px}
+  .final .ctarow{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+  /* ----- Footer ----- */
+  footer{border-bottom:none}
+  footer .wrap{padding:56px 24px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-end}
+  footer .logo{font-size:15px;font-weight:900;letter-spacing:5px}
+  footer .made{font-size:12px;color:var(--g4);margin-top:10px;line-height:1.6}
+  footer .made a{color:var(--g5)}
+  footer .made a:hover{color:var(--white)}
+  footer .flinks{display:flex;gap:24px;flex-wrap:wrap}
+  footer .flinks a{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--g5);font-weight:700}
+  footer .flinks a:hover{color:var(--white)}
+
+  /* ----- Révélation au scroll (discrète) ----- */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .reveal{opacity:1;transform:none;transition:none}
+    .cta:hover{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="#top" class="logo">LIFEOS</a>
+    <div class="navlinks">
+      <a href="#focus" class="hide-sm">Le verrou</a>
+      <a href="#features" class="hide-sm">Fonctions</a>
+      <a href="#install" class="hide-sm">Installer</a>
+      <a href="/app" class="hide-sm">Version PC</a>
+      <a class="cta" href="/download/lifeos.apk" download>Télécharger</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <p class="label eyebrow">Launcher Android · Gratuit</p>
+      <h1>Ton téléphone te sert.<br><span>Pas l'inverse.</span></h1>
+      <p class="lead">
+        LifeOS remplace ton écran d'accueil et <b style="color:#fff">verrouille physiquement ton
+        téléphone</b> pendant tes blocs de focus. Planning, notes, objectifs, streak — un seul
+        système, synchronisé entre ton téléphone et ton PC.
+      </p>
+      <div class="ctarow">
+        <a class="cta" href="/download/lifeos.apk" download>
+          Télécharger l'APK <span class="sz">Android · 9 Mo</span>
+        </a>
+        <a class="cta ghost" href="/app">Essayer sur PC</a>
+      </div>
+      <div class="meta">
+        <div><b>Android 8.0+</b> requis</div>
+        <div><b>Aucune pub</b>, aucun tracker</div>
+        <div>Version <b>3.1</b></div>
+      </div>
+    </div>
+
+    <div class="phone-wrap">
+      <div class="phone" aria-hidden="true">
+        <div class="top">
+          <div>
+            <div class="clock" id="clock">07:12</div>
+            <div class="date" id="pdate">MARDI 15 JUILLET</div>
+          </div>
+          <div class="streak">STREAK&nbsp;: 14</div>
+        </div>
+        <div class="cur">› RÉVISIONS MATHS</div>
+        <div class="enter">ENTRER EN FOCUS</div>
+        <div class="bl done"><span class="box on"></span><span class="bt">06:30</span><span class="bn">Routine matin</span><span class="nn">NN</span></div>
+        <div class="bl done"><span class="box on"></span><span class="bt">07:00</span><span class="bn">Sport</span></div>
+        <div class="bl"><span class="box"></span><span class="bt">08:00</span><span class="bn">Révisions maths</span><span class="nn">NN</span></div>
+        <div class="bl"><span class="box"></span><span class="bt">14:00</span><span class="bn">Deep work projet</span></div>
+        <div class="bl"><span class="box"></span><span class="bt">22:00</span><span class="bn">Lecture</span></div>
+        <div class="tabs"><span>PLAN</span><span>SEM.</span><span>NOTES</span><span>PQ?</span><span>APPS</span><span>STREAK</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== PROBLÈME ===================== -->
+<section class="prob pad">
+  <div class="wrap">
+    <p class="label eyebrow reveal">Le vrai problème</p>
+    <h2 class="reveal">Ce n'est pas que tu manques de volonté.<br>C'est que ton téléphone est conçu pour te la voler.</h2>
+    <div class="stat-row reveal">
+      <div class="stat"><div class="n">58</div><div class="t">fois par jour, en moyenne, qu'on déverrouille son téléphone.</div></div>
+      <div class="stat"><div class="n">23 min</div><div class="t">pour retrouver sa concentration après une seule interruption.</div></div>
+      <div class="stat"><div class="n">1 appli</div><div class="t">suffit à faire dérailler une session de travail entière.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOCUS — LA THÈSE ===================== -->
+<section class="focus pad" id="focus">
+  <div class="wrap">
+    <p class="label eyebrow reveal">Le cœur de LifeOS</p>
+    <h2 class="reveal">Le verrou de focus.<br>Pas une notification en moins. Zéro.</h2>
+    <p class="lead reveal" style="margin-top:22px">
+      Tu choisis un bloc, tu entres en focus. À partir de là, ton téléphone est à toi — mais rien
+      d'autre. Chaque tentative d'ouvrir une appli te ramène à l'écran de blocage, et elle est comptée.
+    </p>
+    <div class="steps reveal">
+      <div class="step"><div class="k">01</div><h3>Tu entres</h3><p>Un tap sur « Entrer en focus » sur le bloc en cours. Un service surveille l'app au premier plan.</p></div>
+      <div class="step"><div class="k">02</div><h3>Ça se ferme</h3><p>Accueil, récentes, notifications, autre appli : tout est intercepté. Retour immédiat sur l'écran de blocage.</p></div>
+      <div class="step"><div class="k">03</div><h3>C'est compté</h3><p>Chaque fuite s'affiche à l'écran. Tu te vois flancher, en direct. C'est inconfortable — c'est le but.</p></div>
+      <div class="step"><div class="k">04</div><h3>Tu sors en le jurant</h3><p>Une seule issue : recopier ton serment. La certification coche le bloc automatiquement.</p></div>
+    </div>
+    <div class="oath reveal">
+      <div class="q">« Je certifie sur l'honneur avoir accompli cette tâche. »</div>
+      <div class="n">La seule porte de sortie</div>
+    </div>
+    <div style="margin-top:44px" class="reveal">
+      <a class="cta" href="/download/lifeos.apk" download style="background:#000;color:#fff;border-color:#000">
+        Reprendre le contrôle <span class="sz" style="color:#999">Télécharger · gratuit</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FONCTIONS ===================== -->
+<section class="pad" id="features">
+  <div class="wrap">
+    <p class="label eyebrow reveal">Un système complet</p>
+    <h2 class="reveal">Tout ce qu'il faut pour tenir une vie exigeante.</h2>
+    <div class="feat-grid reveal">
+      <div class="feat"><div class="mk">▤&nbsp;PLAN</div><h3>Planning en blocs</h3><p>Construis ta journée en blocs horaires cochables. Marque les non-négociables « NN » : sans eux, la journée ne compte pas. Calendrier, événements et récurrences inclus.</p></div>
+      <div class="feat"><div class="mk">✎&nbsp;NOTES</div><h3>Notes qui capturent tout</h3><p>Texte, photo, vidéo, mémo vocal et dessin au doigt. Enregistrement automatique, corbeille de sécurité de 30 jours. Rien ne se perd.</p></div>
+      <div class="feat"><div class="mk">▦&nbsp;WIDGETS</div><h3>Tes widgets, ta grille</h3><p>Place n'importe quel widget Android sur une grille libre. L'espace se compacte tout seul : pas de place gaspillée.</p></div>
+      <div class="feat"><div class="mk">◇&nbsp;OBJECTIFS</div><h3>Objectifs par horizon</h3><p>Cette semaine, ce mois, cette année, long terme. Chaque objectif se découpe en étapes cochables. Tu vois l'avancée d'un coup d'œil.</p></div>
+      <div class="feat"><div class="mk">✕&nbsp;STREAK</div><h3>Un streak qui ne pardonne pas</h3><p>Jour complet = tous les blocs NN cochés. Jour raté = streak à zéro. Pas d'excuse, pas de négociation. La constance devient visible.</p></div>
+      <div class="feat"><div class="mk">⇄&nbsp;SYNC</div><h3>Téléphone + PC, en direct</h3><p>Un compte, deux écrans. Planifie sur le PC le matin, exécute sur le téléphone dans la journée. Tout se synchronise en quelques secondes.</p></div>
+    </div>
+    <div style="margin-top:44px" class="reveal">
+      <a class="cta" href="/download/lifeos.apk" download>Installer LifeOS</a>
+      <a class="cta ghost" href="/app" style="margin-left:8px">Ouvrir la version PC</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LAUNCHER ===================== -->
+<section class="launcher pad">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="label eyebrow">Ce n'est pas une appli de plus</p>
+      <h2>C'est ton nouvel écran d'accueil.</h2>
+      <p class="lead" style="margin-top:22px">
+        LifeOS remplace ton launcher. Fini la grille d'icônes colorées qui appelle au scroll —
+        un accueil noir, tes blocs du jour, et tes applis à un geste. Mais un vrai launcher fait
+        tout ce qu'Android sait faire.
+      </p>
+    </div>
+    <ul class="reveal">
+      <li><span class="x">→</span><div><b>Toutes tes applis</b>, épinglées ou rangées en dossiers, avec recherche.</div></li>
+      <li><span class="x">→</span><div><b>Appui long sur une appli</b> : désinstaller, infos, raccourcis, widgets, store.</div></li>
+      <li><span class="x">→</span><div><b>Liste blanche de focus</b> : autorise une appli précise (musique, cartes) pendant un bloc.</div></li>
+      <li><span class="x">→</span><div><b>Arsenal « Pourquoi »</b> : tes raisons de te lever, affichées quand tu craques en focus.</div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== INSTALLATION ===================== -->
+<section class="install pad" id="install">
+  <div class="wrap">
+    <p class="label eyebrow reveal">Trois minutes, pas de Play Store</p>
+    <h2 class="reveal">Installe-le maintenant.</h2>
+    <div class="steps reveal">
+      <div class="step"><div class="k">1</div><h3>Télécharge l'APK</h3><p>Un fichier de 9 Mo, directement sur ton téléphone Android. <b>Aucun compte requis pour télécharger.</b></p></div>
+      <div class="step"><div class="k">2</div><h3>Ouvre le fichier</h3><p>Android te demande d'<b>autoriser l'installation d'applis inconnues</b> — un réglage à activer une fois. C'est normal hors Play Store.</p></div>
+      <div class="step"><div class="k">3</div><h3>Lance & connecte-toi</h3><p>Crée ton compte, définis LifeOS comme <b>écran d'accueil</b>, et planifie ton premier bloc. C'est parti.</p></div>
+    </div>
+    <div style="margin-top:48px" class="reveal">
+      <a class="cta" href="/download/lifeos.apk" download>
+        Télécharger LifeOS <span class="sz">Android · 9 Mo · v3.1</span>
+      </a>
+    </div>
+    <p class="label reveal" style="margin-top:20px;color:var(--g4)">
+      Au premier focus, LifeOS demande deux autorisations (accès à l'usage + superposition) —
+      détaillées ci-dessous.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section class="faq pad">
+  <div class="wrap">
+    <p class="label eyebrow reveal">Questions légitimes</p>
+    <h2 class="reveal" style="margin-bottom:44px">Avant de télécharger.</h2>
+    <div class="reveal">
+      <details open>
+        <summary>C'est vraiment gratuit ? <span class="plus">+</span></summary>
+        <div class="a">Oui. LifeOS est gratuit, sans publicité et sans achat intégré. C'est un outil personnel devenu public, pas un business.</div>
+      </details>
+      <details>
+        <summary>Pourquoi passer par un APK et pas le Play Store ? <span class="plus">+</span></summary>
+        <div class="a">Un launcher qui verrouille le téléphone utilise des autorisations que la distribution Play Store complique. L'APK te donne exactement la même app, installée en un fichier. C'est une pratique courante pour les launchers.</div>
+      </details>
+      <details>
+        <summary>Ces autorisations, c'est quoi au juste ? <span class="plus">+</span></summary>
+        <div class="a">Deux, demandées seulement au premier focus. <b style="color:#fff">Accès aux données d'usage</b> : pour savoir quelle appli est au premier plan et la refermer. <b style="color:#fff">Superposition</b> : pour réafficher l'écran de blocage par-dessus. Le micro et la caméra ne servent qu'aux notes, et uniquement si tu les utilises.</div>
+      </details>
+      <details>
+        <summary>Où vont mes données ? <span class="plus">+</span></summary>
+        <div class="a">Ton planning, tes notes et tes objectifs sont chiffrés en transit et stockés sur ton compte (Supabase) pour la synchronisation entre appareils. Rien n'est vendu, rien n'est analysé à des fins publicitaires. Les photos, vidéos et mémos vocaux de tes notes restent sur ton téléphone.</div>
+      </details>
+      <details>
+        <summary>Ça marche hors-ligne ? <span class="plus">+</span></summary>
+        <div class="a">Oui. Tout fonctionne sans connexion ; la synchronisation se fait dès que le réseau revient. Le verrou de focus, lui, n'a jamais besoin d'Internet.</div>
+      </details>
+      <details>
+        <summary>Je peux l'utiliser sur mon ordinateur ? <span class="plus">+</span></summary>
+        <div class="a">Oui — la <a href="/app">version PC</a> ouvre ton système dans le navigateur avec le même compte. Idéal pour planifier ta semaine au calme, puis exécuter sur le téléphone.</div>
+      </details>
+      <details>
+        <summary>Et si je veux revenir à mon ancien launcher ? <span class="plus">+</span></summary>
+        <div class="a">À tout moment, dans les réglages Android → Applications par défaut → Écran d'accueil. LifeOS ne te retient pas : c'est ta discipline qui te garde, pas un piège.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA FINAL ===================== -->
+<section class="final pad">
+  <div class="wrap">
+    <p class="label eyebrow reveal">Le moment, c'est maintenant</p>
+    <h2 class="reveal">Ta prochaine session de focus commence par un fichier de 9 Mo.</h2>
+    <p class="lead reveal">Installe LifeOS, planifie un bloc, entre en focus. Tu verras la différence dès aujourd'hui.</p>
+    <div class="ctarow reveal">
+      <a class="cta" href="/download/lifeos.apk" download>Télécharger l'APK</a>
+      <a class="cta ghost" href="/app">Essayer d'abord sur PC</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="logo">LIFEOS</div>
+      <div class="made">
+        Ton système. Partout.<br>
+        Conçu par <a href="https://enzo.bellenguez.fr" target="_blank" rel="noopener">Enzo Bellenguez</a>.
+      </div>
+    </div>
+    <div class="flinks">
+      <a href="/download/lifeos.apk" download>Télécharger</a>
+      <a href="/app">Version PC</a>
+      <a href="#focus">Le verrou</a>
+      <a href="#install">Installer</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* Horloge live de la maquette + date du jour — le même geste que l'écran d'accueil réel. */
+  (function(){
+    var clock=document.getElementById('clock'), pdate=document.getElementById('pdate');
+    var days=['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
+    var months=['JANVIER','FÉVRIER','MARS','AVRIL','MAI','JUIN','JUILLET','AOÛT','SEPTEMBRE','OCTOBRE','NOVEMBRE','DÉCEMBRE'];
+    function tick(){
+      var d=new Date();
+      if(clock) clock.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+      if(pdate) pdate.textContent=days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()];
+    }
+    tick(); setInterval(tick,10000);
+  })();
+
+  /* Révélation au scroll — discrète, désactivée si mouvement réduit. */
+  (function(){
+    var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    var els=document.querySelectorAll('.reveal');
+    if(reduce||!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;}
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    },{threshold:.12});
+    els.forEach(function(e){io.observe(e)});
+  })();
+</script>
+</body>
+</html>
