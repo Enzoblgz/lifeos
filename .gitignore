@@ -17,3 +17,7 @@ android/app/release/
 .DS_Store
 *.swp
 Thumbs.db
+
+# ===== Personnel — jamais dans le dépôt public =====
+sync/
+_contexte.md
