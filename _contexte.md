@@ -66,6 +66,23 @@ Décision : LifeOS devient une plateforme type Instagram — comptes utilisateur
 
 
 
+## v3.1 — Passage grand public (15/07) — en ligne ✓
+
+**Architecture publique** (demande Enzo, « on développe au grand public ») :
+- **GitHub** = code source → dépôt **privé** `github.com/Enzoblgz/lifeos` (poussé). Privé par défaut = choix de divulgation réversible ; passer public avec `gh repo edit Enzoblgz/lifeos --visibility public` quand tu veux.
+- **Vercel** = site + interface PC → projet `lifeos`, déployé en prod. Domaine stable **lifeos-gamma-five.vercel.app**.
+- **Supabase** = auth + base + sync (déjà en place, clé anon publique dans `Supa.kt` et `web/app/index.html`).
+
+**Restructuration du web** :
+- `web/index.html` = **nouvelle landing page grand public** (noir & blanc, thèse = le verrou de focus, maquette téléphone avec horloge live, sections problème/verrou/fonctions/launcher/install/FAQ/CTA final, plein de CTA de téléchargement). Zéro erreur JS, responsive.
+- `web/app/index.html` = l'ancienne interface PC, déplacée sous **/app** (login Supabase intact).
+- `web/download/lifeos.apk` = APK servi au téléchargement (type MIME correct, 9,1 Mo). Landing → liens relatifs `/download/lifeos.apk` et `/app`.
+
+**Modif à la volée — compaction des widgets** : la grille ne réserve plus 3 lignes en dur. Elle se cale en haut (retire les lignes vides au-dessus) et s'arrête à la dernière ligne occupée : `rowStart=min(r)`, `rowEnd=max(r+h)`, hauteur = `cellH*(rowEnd-rowStart)`. Un seul widget de 2 de haut → bloc de 2 lignes, plus de place gaspillée. (`LauncherActivity.kt`, testé en compilation ; pas encore vu à l'écran — téléphone débranché.)
+
+- APK **LifeOS-v3.1.apk** (versionCode 4) compilé + installé sur le téléphone avant restructuration web.
+- **Reste à faire (Enzo)** : 1) voir la compaction des widgets à l'écran ; 2) brancher un vrai domaine (`lifeos.app` ?) sur le projet Vercel si souhaité ; 3) décider public/privé du dépôt GitHub ; 4) tester le téléchargement + install depuis le site sur un téléphone tiers.
+
 ## v3.0 — Apps « comme sur Android » + notes riches (14/07) — installée ✓
 
 **Menu d'appui long sur une app** (accueil, dossier ou liste APPS) en deux blocs :
