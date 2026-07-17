@@ -300,9 +300,14 @@ object Store {
         sp.edit().remove("sess_access").remove("sess_refresh").remove("sess_uid").apply()
     }
 
+    // ----- Onboarding (device-local : chaque appareil fait son propre réglage) -----
+    fun onboarded(): Boolean = sp.getBoolean("dev_onboarded", false)
+    fun setOnboarded() = sp.edit().putBoolean("dev_onboarded", true).apply()
+
     // ----- Export / import pour la sync -----
+    // dev_ = réglages propres à l'appareil (onboarding, permissions), jamais synchronisés.
     private fun isLocalKey(k: String) =
-        k.startsWith("focus_") || k.startsWith("sess_") || k.startsWith("wl_")
+        k.startsWith("focus_") || k.startsWith("sess_") || k.startsWith("wl_") || k.startsWith("dev_")
 
     fun exportState(): JSONObject {
         val out = JSONObject()

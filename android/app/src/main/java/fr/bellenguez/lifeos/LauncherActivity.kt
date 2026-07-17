@@ -389,6 +389,17 @@ private fun LauncherScreen() {
         return
     }
 
+    // onboarding : une seule fois par appareil, juste après le login
+    var onboarded by remember { mutableStateOf(Store.onboarded()) }
+    var goPlanAfterOnb by remember { mutableStateOf(false) }
+    if (!onboarded) {
+        OnboardingScreen(
+            onDone = { onboarded = true },
+            onOpenPlan = { onboarded = true; goPlanAfterOnb = true }
+        )
+        return
+    }
+
     var tick by remember { mutableIntStateOf(0) }
     var showAll by remember { mutableStateOf(false) }
     var showAnkiPicker by remember { mutableStateOf(false) }
@@ -399,6 +410,10 @@ private fun LauncherScreen() {
     // saveable : la section (notes en tête) doit survivre si Android tue le launcher
     // pendant qu'une autre app (caméra…) est au premier plan
     var section by rememberSaveable { mutableStateOf<String?>(null) } // plan / week / notes / why / streak
+    // onboarding « planifier mon premier bloc » → ouvre PLAN une fois l'écran monté
+    LaunchedEffect(goPlanAfterOnb) {
+        if (goPlanAfterOnb) { section = "plan"; goPlanAfterOnb = false }
+    }
     var search by remember { mutableStateOf("") }
     var openFolder by remember { mutableStateOf<String?>(null) }
     var menuFor by remember { mutableStateOf<String?>(null) }
