@@ -130,6 +130,70 @@ object Store {
         get() = sp.getInt("streak", 0)
         set(v) = sp.edit().putInt("streak", v).apply()
 
+    /**
+     * Audit du streak : chaque jour écoulé depuis le dernier audit est jugé.
+     * - jour validé → rien (le +1 a été fait à la validation)
+     * - jour sans aucun bloc planifié → neutre
+     * - tous les NN cochés mais journée non validée (oubli du bouton) → +1, rattrapé
+     * - sinon → jour raté, streak remis à zéro
+     * Appelé au démarrage et au changement de jour. Renvoie true si le streak a bougé.
+     */
+    fun auditStreak(): Boolean {
+        val today = dateKey(0)
+        val last = rawString("streak_audit")
+        if (last == today) return false
+        var changed = false
+        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val cal = Calendar.getInstance()
+        try {
+            // premier audit : on ne juge que la veille
+            cal.time = fmt.parse(last ?: dateKey(-1))!!
+        } catch (e: Exception) {
+            cal.add(Calendar.DAY_OF_YEAR, -1)
+        }
+        while (true) {
+            val key = fmt.format(cal.time)
+            if (key >= today) break
+            if ((last == null || key > last) && !sp.getBoolean("valid-$key", false)) {
+                val blocks = Schedule.blocksOn(key)
+                if (blocks.isNotEmpty()) {
+                    val done = sp.getStringSet("checks-$key", emptySet())!!
+                        .mapNotNull { it.toIntOrNull() }.toSet()
+                    val nnOk = blocks.withIndex().all { (i, b) -> !b.nn || i in done }
+                    if (nnOk) {
+                        sp.edit().putBoolean("valid-$key", true).apply()
+                        streak = streak + 1
+                    } else {
+                        streak = 0
+                    }
+                    changed = true
+                }
+            }
+            cal.add(Calendar.DAY_OF_YEAR, 1)
+        }
+        putRaw("streak_audit", today)
+        return changed
+    }
+
+    /**
+     * Reporte un événement d'aujourd'hui à demain (événement unique seulement).
+     * Les coches du jour sont réindexées : elles pointent sur des index de la liste triée.
+     */
+    fun postponeEventToTomorrow(id: Long) {
+        val idx = Schedule.today().indexOfFirst { it.id == id }
+        val e = events().find { it.optLong("id") == id } ?: return
+        updateEvent(
+            id, dateKey(1), e.optString("t"), e.optString("n"),
+            e.optBoolean("nn"), e.optString("rec", "none")
+        )
+        if (idx >= 0) {
+            val remapped = checks().mapNotNull { c ->
+                when { c == idx -> null; c > idx -> c - 1; else -> c }
+            }.toSet()
+            sp.edit().putStringSet("checks-${dayKey()}", remapped.map { it.toString() }.toSet()).apply()
+        }
+    }
+
     // ----- Focus (local à l'appareil) -----
     fun focusActive(): Boolean = sp.getBoolean("focus_active", false)
     fun focusIdx(): Int = sp.getInt("focus_idx", -1)

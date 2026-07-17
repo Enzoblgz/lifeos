@@ -8,7 +8,9 @@ data class Block(
     val time: String,   // "14h00–16h00"
     val name: String,
     val hat: String,    // casquette
-    val nn: Boolean = false
+    val nn: Boolean = false,
+    val id: Long = 0L,        // id de l'événement source (0 = bloc sans événement)
+    val rec: String = "none"  // récurrence de l'événement source
 )
 
 data class Goal(val name: String, val quota: Int, val unit: String)
@@ -151,11 +153,12 @@ object Schedule {
     }
 
     /**
-     * Journée effective = les événements du calendrier d'aujourd'hui, rien d'autre.
+     * Journée effective = les événements du calendrier du jour donné, rien d'autre.
      * (Plus de blocs ni de plans types — les événements suffisent.)
+     * Le tri doit rester STABLE : les coches (`checks-<jour>`) sont indexées sur cette liste.
      */
-    fun today(): List<Block> = Store.events()
-        .filter { eventOccursOn(it, Store.dateKey(0)) }
+    fun blocksOn(key: String): List<Block> = Store.events()
+        .filter { eventOccursOn(it, key) }
         .map { e ->
             // l'heure reste telle que saisie : "9h00" = début seul (fin libre),
             // "9h00–10h30" = fin explicite si l'utilisateur la précise
@@ -163,10 +166,14 @@ object Schedule {
                 time = e.optString("t").trim(),
                 name = e.optString("n"),
                 hat = "",
-                nn = e.optBoolean("nn", false)
+                nn = e.optBoolean("nn", false),
+                id = e.optLong("id"),
+                rec = e.optString("rec", "none")
             )
         }
         .sortedBy { if (it.time.isEmpty()) Int.MAX_VALUE else parseRange(it.time).first }
+
+    fun today(): List<Block> = blocksOn(Store.dateKey(0))
 
     /** "14h00–16h00" -> minutes depuis minuit (début, fin). Tolère "-" et "14h" sans minutes. */
     fun parseRange(t: String): Pair<Int, Int> {

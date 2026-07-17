@@ -891,6 +891,8 @@ fun StreakScreen(refresh: Int, onChange: () -> Unit) {
             Text(
                 "JOUR COMPLET = tous les blocs NN cochés.\n" +
                     "JOUR RATÉ = streak à zéro, +15 min de renfo le lendemain (cumul max +45).\n" +
+                    "Vérification automatique chaque matin : NN d'hier non cochés = streak à 0.\n" +
+                    "Reporter un bloc NN à demain = streak à 0 aussi.\n" +
                     "Pas d'excuse. Pas de négociation.",
                 color = Bw.G5, fontSize = 13.sp, lineHeight = 23.sp
             )

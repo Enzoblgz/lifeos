@@ -100,6 +100,7 @@ class LauncherActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Store.init(this)
+        Store.auditStreak()              // jour raté (NN non cochés) → streak remis à zéro
         NoteStore.purgeExpired(this)     // corbeille : au-delà de 30 jours, c'est fini
         NoteStore.sweepOrphanMedia(this) // médias des notes détruites depuis le web
         widgetHost = android.appwidget.AppWidgetHost(this, HOST_ID)
@@ -420,7 +421,13 @@ private fun LauncherScreen() {
         shortcutsFor = null; widgetPkg = null
     }
 
-    LaunchedEffect(Unit) { while (true) { delay(10_000); tick++ } }
+    // le launcher tourne sans fin : le passage à minuit doit déclencher l'audit du streak
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(10_000); tick++
+            if (Store.auditStreak()) dataVersion++
+        }
+    }
     // sync : rapatrie les changements faits sur l'ordi (< 5 s)
     LaunchedEffect(Unit) {
         while (true) {
@@ -896,6 +903,13 @@ private fun LauncherScreen() {
         val b = blocks.getOrNull(i)
         if (b == null) { blockMenu = null } else {
             val done = i in checks
+            // reporter un bloc NN coûte le streak : confirmation obligatoire
+            var confirmPostpone by remember(i) { mutableStateOf(false) }
+            fun postpone() {
+                Store.postponeEventToTomorrow(b.id)
+                blockMenu = null
+                dataVersion++; pushAsync()
+            }
             Column(
                 Modifier.fillMaxSize().background(Bw.Black).padding(28.dp),
                 verticalArrangement = Arrangement.Center
@@ -906,21 +920,45 @@ private fun LauncherScreen() {
                     color = Bw.White, fontSize = 22.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp
                 )
                 Spacer(Modifier.height(24.dp))
-                if (!done) {
-                    BwButton("Entrer en focus dessus") { blockMenu = null; startFocusOn(i) }
-                    Spacer(Modifier.height(10.dp))
-                }
-                BwButton(if (done) "Décocher" else "Cocher", ghost = true) {
-                    if (!Store.focusActive()) {
-                        Store.setCheck(i, !done)
-                        dataVersion++; pushAsync()
+                if (confirmPostpone) {
+                    Text(
+                        "Bloc NON NÉGOCIABLE.\nLe reporter à demain remet ton streak à ZÉRO (${Store.streak} → 0).",
+                        color = Bw.White, fontSize = 15.sp, lineHeight = 24.sp
+                    )
+                    Spacer(Modifier.height(20.dp))
+                    BwButton("Reporter quand même — streak à 0") {
+                        Store.streak = 0
+                        postpone()
                     }
-                    blockMenu = null
+                    Spacer(Modifier.height(10.dp))
+                    BwButton("Annuler", ghost = true) { confirmPostpone = false }
+                } else {
+                    if (!done) {
+                        BwButton("Entrer en focus dessus") { blockMenu = null; startFocusOn(i) }
+                        Spacer(Modifier.height(10.dp))
+                    }
+                    BwButton(if (done) "Décocher" else "Cocher", ghost = true) {
+                        if (!Store.focusActive()) {
+                            Store.setCheck(i, !done)
+                            dataVersion++; pushAsync()
+                        }
+                        blockMenu = null
+                    }
+                    // un événement récurrent existe déjà demain : rien à reporter
+                    if (!done && b.id != 0L && b.rec == "none") {
+                        Spacer(Modifier.height(10.dp))
+                        BwButton(
+                            if (b.nn) "Reporter à demain (NN…)" else "Reporter à demain",
+                            ghost = true
+                        ) {
+                            if (b.nn) confirmPostpone = true else postpone()
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    BwButton("Éditer dans le plan", ghost = true) { blockMenu = null; section = "plan" }
+                    Spacer(Modifier.height(10.dp))
+                    BwButton("Annuler", ghost = true) { blockMenu = null }
                 }
-                Spacer(Modifier.height(10.dp))
-                BwButton("Éditer dans le plan", ghost = true) { blockMenu = null; section = "plan" }
-                Spacer(Modifier.height(10.dp))
-                BwButton("Annuler", ghost = true) { blockMenu = null }
             }
         }
     }
