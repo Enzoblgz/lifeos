@@ -511,10 +511,11 @@ private fun LauncherScreen() {
     val target = remember(tick, dataVersion, homeSig) { Schedule.focusTarget(blocks, checks) }
 
     fun startFocusOn(idx: Int) {
+        val block = blocks.getOrNull(idx) ?: return
         if (!hasUsageAccess(ctx) || !canOverlay(ctx)) {
             showPerms = true
         } else {
-            Store.startFocus(idx)
+            Store.startFocus(block.id)
             ctx.startForegroundService(Intent(ctx, FocusService::class.java))
             ctx.startActivity(Intent(ctx, BlockerActivity::class.java))
         }
@@ -614,12 +615,15 @@ private fun LauncherScreen() {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Label("Aujourd'hui")
-                        Label("${checks.size} / ${blocks.size}", color = Bw.G5)
+                        val doneCount = blocks.count { it.id in checks }
+                        Label("$doneCount / ${blocks.size}", color = Bw.G5)
                     }
                     Box(Modifier.fillMaxWidth().height(2.dp).background(Bw.G2)) {
                         Box(
                             Modifier
-                                .fillMaxWidth((checks.size.toFloat() / blocks.size).coerceIn(0f, 1f))
+                                .fillMaxWidth(
+                                    (blocks.count { it.id in checks }.toFloat() / blocks.size).coerceIn(0f, 1f)
+                                )
                                 .height(2.dp)
                                 .background(Bw.White)
                         )
@@ -627,14 +631,14 @@ private fun LauncherScreen() {
                     Spacer(Modifier.height(4.dp))
                 }
                 itemsIndexed(blocks) { i, b ->
-                    val done = i in checks
+                    val done = b.id in checks
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .combinedClickable(
                                 onClick = {
                                     if (!Store.focusActive()) {
-                                        Store.setCheck(i, !done)
+                                        Store.setCheck(b.id, !done)
                                         dataVersion++
                                         pushAsync()
                                     }
@@ -902,7 +906,7 @@ private fun LauncherScreen() {
     blockMenu?.let { i ->
         val b = blocks.getOrNull(i)
         if (b == null) { blockMenu = null } else {
-            val done = i in checks
+            val done = b.id in checks
             // reporter un bloc NN coûte le streak : confirmation obligatoire
             var confirmPostpone by remember(i) { mutableStateOf(false) }
             fun postpone() {
@@ -939,7 +943,7 @@ private fun LauncherScreen() {
                     }
                     BwButton(if (done) "Décocher" else "Cocher", ghost = true) {
                         if (!Store.focusActive()) {
-                            Store.setCheck(i, !done)
+                            Store.setCheck(b.id, !done)
                             dataVersion++; pushAsync()
                         }
                         blockMenu = null

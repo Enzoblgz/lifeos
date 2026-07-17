@@ -1,6 +1,15 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+// Signature release : android/keystore.properties + android/lifeos-release.jks,
+// jamais dans git (sauvegardés par Google Drive). Sans eux, la release reste non signée.
+val keystoreProps = Properties().apply {
+    val f = rootProject.file("keystore.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
 }
 
 android {
@@ -11,13 +20,27 @@ android {
         applicationId = "fr.bellenguez.lifeos"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "3.5"
+        versionCode = 9
+        versionName = "3.6"
+    }
+
+    signingConfigs {
+        if (keystoreProps.isNotEmpty()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (keystoreProps.isNotEmpty()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
@@ -29,6 +52,12 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    // lint désactivé sur la release : le runner lint plante avec le JDK 26 local
+    // (problème d'outillage, pas de code). À réactiver avec un JDK 17 dédié.
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"

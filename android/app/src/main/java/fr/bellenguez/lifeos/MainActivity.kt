@@ -234,7 +234,7 @@ private fun NowScreen(refresh: Int, onChange: () -> Unit, onNeedPerms: () -> Uni
                     if (!hasUsageAccess(ctx) || !canOverlay(ctx)) {
                         onNeedPerms()
                     } else {
-                        Store.startFocus(cur.idx)
+                        Store.startFocus(blocks[cur.idx].id)
                         ctx.startForegroundService(Intent(ctx, FocusService::class.java))
                         ctx.startActivity(Intent(ctx, BlockerActivity::class.java))
                     }
@@ -248,20 +248,21 @@ private fun NowScreen(refresh: Int, onChange: () -> Unit, onNeedPerms: () -> Uni
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Label("Aujourd'hui")
-                val pct = if (blocks.isEmpty()) 0 else 100 * checks.size / blocks.size
+                val doneCount = blocks.count { it.id in checks }
+                val pct = if (blocks.isEmpty()) 0 else 100 * doneCount / blocks.size
                 Label("$pct %", color = Bw.G5)
             }
-            ProgressLine(checks.size.toFloat() / blocks.size.coerceAtLeast(1))
+            ProgressLine(blocks.count { it.id in checks }.toFloat() / blocks.size.coerceAtLeast(1))
         }
         itemsIndexed(blocks) { i, b ->
-            val done = i in checks
+            val done = b.id in checks
             val isCurrent = cur.mode == "now" && cur.idx == i
             Row(
                 Modifier
                     .fillMaxWidth()
                     .background(if (isCurrent) Bw.G1 else Bw.Black)
                     .clickable {
-                        Store.setCheck(i, !done)
+                        Store.setCheck(b.id, !done)
                         onChange()
                     }
                     .padding(horizontal = 20.dp, vertical = 14.dp),
@@ -864,7 +865,7 @@ private fun SmallGhost(text: String, modifier: Modifier = Modifier, onClick: () 
 fun StreakScreen(refresh: Int, onChange: () -> Unit) {
     val checks = remember(refresh) { Store.checks() }
     val blocks = Schedule.today()
-    val nnOk = blocks.isNotEmpty() && blocks.withIndex().all { (i, b) -> !b.nn || i in checks }
+    val nnOk = blocks.isNotEmpty() && blocks.all { !it.nn || it.id in checks }
     val validated = remember(refresh) { Store.isValidated() }
 
     Column(Modifier.fillMaxSize().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {

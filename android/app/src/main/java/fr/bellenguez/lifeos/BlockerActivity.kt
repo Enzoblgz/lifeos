@@ -78,8 +78,7 @@ private fun BlockerScreen(onCertified: () -> Unit) {
         return
     }
     var panel by remember { mutableStateOf(Panel.FOCUS) }
-    val idx = Store.focusIdx()
-    val block = Schedule.today().getOrNull(idx)
+    val block = Schedule.today().find { it.id == Store.focusId() }
     if (block == null) {
         // le planning a changé sous le focus : plus rien à bloquer, on libère
         LaunchedEffect(Unit) { onCertified() }
@@ -262,7 +261,7 @@ private fun BlockerScreen(onCertified: () -> Unit) {
                 )
                 Spacer(Modifier.height(20.dp))
                 BwButton("Certifier et déverrouiller", enabled = oathMatches(input)) {
-                    Store.setCheck(idx, true)
+                    Store.setCheck(block.id, true)
                     Thread { Supa.tryPush() }.start()
                     onCertified()
                 }

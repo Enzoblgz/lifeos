@@ -111,12 +111,29 @@ object Store {
     }
 
     // ----- Blocs du jour -----
-    fun checks(): Set<Int> =
-        sp.getStringSet("checks-${dayKey()}", emptySet())!!.map { it.toInt() }.toSet()
+    // Les coches sont stockées par ID D'ÉVÉNEMENT (pas par position : ajouter un
+    // événement en cours de journée décalait les coches sur les mauvais blocs).
+    // Les ids sont des timestamps (> LEGACY_MAX) ; en dessous, c'est un ancien index.
+    private const val LEGACY_CHECK_MAX = 100_000L
 
-    fun setCheck(idx: Int, done: Boolean) {
+    fun checks(): Set<Long> {
+        val raw = sp.getStringSet("checks-${dayKey()}", emptySet())!!
+            .mapNotNull { it.toLongOrNull() }
+        val legacy = raw.filter { it < LEGACY_CHECK_MAX }
+        if (legacy.isEmpty()) return raw.toSet()
+        // migration : les anciens index sont traduits via la liste triée du jour
+        val blocks = Schedule.today()
+        val migrated = raw.map { v ->
+            if (v >= LEGACY_CHECK_MAX) v
+            else blocks.getOrNull(v.toInt())?.id ?: v
+        }.toSet()
+        sp.edit().putStringSet("checks-${dayKey()}", migrated.map { it.toString() }.toSet()).apply()
+        return migrated
+    }
+
+    fun setCheck(id: Long, done: Boolean) {
         val s = checks().toMutableSet()
-        if (done) s.add(idx) else s.remove(idx)
+        if (done) s.add(id) else s.remove(id)
         sp.edit().putStringSet("checks-${dayKey()}", s.map { it.toString() }.toSet()).apply()
     }
 
@@ -157,9 +174,12 @@ object Store {
             if ((last == null || key > last) && !sp.getBoolean("valid-$key", false)) {
                 val blocks = Schedule.blocksOn(key)
                 if (blocks.isNotEmpty()) {
+                    // un jour passé peut contenir des ids ou d'anciens index : on accepte les deux
                     val done = sp.getStringSet("checks-$key", emptySet())!!
-                        .mapNotNull { it.toIntOrNull() }.toSet()
-                    val nnOk = blocks.withIndex().all { (i, b) -> !b.nn || i in done }
+                        .mapNotNull { it.toLongOrNull() }.toSet()
+                    val nnOk = blocks.withIndex().all { (i, b) ->
+                        !b.nn || b.id in done || i.toLong() in done
+                    }
                     if (nnOk) {
                         sp.edit().putBoolean("valid-$key", true).apply()
                         streak = streak + 1
@@ -175,35 +195,27 @@ object Store {
         return changed
     }
 
-    /**
-     * Reporte un événement d'aujourd'hui à demain (événement unique seulement).
-     * Les coches du jour sont réindexées : elles pointent sur des index de la liste triée.
-     */
+    /** Reporte un événement d'aujourd'hui à demain (événement unique seulement). */
     fun postponeEventToTomorrow(id: Long) {
-        val idx = Schedule.today().indexOfFirst { it.id == id }
         val e = events().find { it.optLong("id") == id } ?: return
         updateEvent(
             id, dateKey(1), e.optString("t"), e.optString("n"),
             e.optBoolean("nn"), e.optString("rec", "none")
         )
-        if (idx >= 0) {
-            val remapped = checks().mapNotNull { c ->
-                when { c == idx -> null; c > idx -> c - 1; else -> c }
-            }.toSet()
-            sp.edit().putStringSet("checks-${dayKey()}", remapped.map { it.toString() }.toSet()).apply()
-        }
+        setCheck(id, false) // sa coche éventuelle ne doit pas rester sur aujourd'hui
     }
 
     // ----- Focus (local à l'appareil) -----
     fun focusActive(): Boolean = sp.getBoolean("focus_active", false)
-    fun focusIdx(): Int = sp.getInt("focus_idx", -1)
+    /** Id de l'événement verrouillé (le bloc est retrouvé par id, pas par position). */
+    fun focusId(): Long = sp.getLong("focus_id", -1L)
     fun focusStart(): Long = sp.getLong("focus_start", 0L)
     fun focusEscapes(): Int = sp.getInt("focus_escapes", 0)
 
-    fun startFocus(idx: Int) {
+    fun startFocus(id: Long) {
         sp.edit()
             .putBoolean("focus_active", true)
-            .putInt("focus_idx", idx)
+            .putLong("focus_id", id)
             .putLong("focus_start", System.currentTimeMillis())
             .putInt("focus_escapes", 0)
             .apply()

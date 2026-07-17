@@ -38,7 +38,7 @@ class FocusService : Service() {
                 stopSelf()
                 return
             }
-            if (Store.focusIdx() !in Schedule.today().indices) {
+            if (Schedule.today().none { it.id == Store.focusId() }) {
                 // le bloc verrouillé n'existe plus (planning modifié) : on libère
                 Store.clearFocus()
                 stopSelf()

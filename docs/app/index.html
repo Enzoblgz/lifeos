@@ -170,10 +170,17 @@ function startMin(t){if(!t)return 1e9;const m=t.match(/(\d+)h(\d*)/);
 function todayBlocks(){
   // la journée = les événements du calendrier d'aujourd'hui, rien d'autre
   return events().filter(e=>occursOn(e,dayKey()))
-    .map(e=>({t:e.t||"",n:e.n,c:"",nn:!!e.nn}))
+    .map(e=>({t:e.t||"",n:e.n,c:"",nn:!!e.nn,id:e.id}))
     .sort((a,b)=>startMin(a.t)-startMin(b.t));
 }
-function checks(){return (state["checks-"+dayKey()]||[]).map(Number)}
+/* Coches par ID d'événement (les index se décalaient quand on ajoutait un bloc).
+   Les valeurs < 100000 sont d'anciens index : traduites via la liste triée du jour. */
+function checks(){
+  const raw=(state["checks-"+dayKey()]||[]).map(Number);
+  if(!raw.some(v=>v<100000))return raw;
+  const blocks=todayBlocks();
+  return raw.map(v=>v<100000?(blocks[v]?blocks[v].id:v):v);
+}
 function goalsDone(){const raw=state["goals-"+weekKey()];return raw?raw.split(",").map(Number):goalsDef().map(()=>0)}
 function whyItems(){try{return JSON.parse(state.why||"[]")}catch(e){return []}}
 
@@ -287,7 +294,8 @@ function renderNow(){
     if(cand>=0&&!(hasEnd(blocks[cand].t)&&now>=mins(blocks[cand].t)[1])){cur=cand;mode="now"}
   }
   if(mode==="done")blocks.forEach((b,i)=>{if(mode==="done"&&b.t&&mins(b.t)[0]>now){cur=i;mode="next"}});
-  const pct=blocks.length?Math.round(100*ck.length/blocks.length):0;
+  const doneCount=blocks.filter(b=>ck.includes(b.id)).length;
+  const pct=blocks.length?Math.round(100*doneCount/blocks.length):0;
   document.getElementById("v-now").innerHTML=`
     <div class="sect">
       <span class="label">${mode==="now"?"MAINTENANT":mode==="next"?"PROCHAIN BLOC":"JOURNÉE TERMINÉE"}</span>
@@ -299,19 +307,20 @@ function renderNow(){
       <span class="label">Aujourd'hui</span><span class="label">${pct} %</span>
     </div>
     <div class="pbar" style="margin:0 20px 8px"><div style="width:${pct}%"></div></div>
-    ${blocks.map((b,i)=>`
-      <div class="block ${ck.includes(i)?'done':''}" onclick="toggleCheck(${i})">
+    ${blocks.map(b=>`
+      <div class="block ${ck.includes(b.id)?'done':''}" onclick="toggleCheck(${b.id})">
         <div class="cb">✕</div><div class="time">${b.t}</div>
         <div class="name">${esc(b.n)}</div>
         <span class="hat">${esc(b.c)}</span>${b.nn?'<span class="nn">NN</span>':''}
       </div>`).join("")}
     <div class="note">Le mode FOCUS (verrouillage) se lance depuis le téléphone. Ici tu pilotes, là-bas tu exécutes.</div>`;
 }
-function toggleCheck(i){
+function toggleCheck(id){
   mutate(()=>{
     const k="checks-"+dayKey();
-    const s=new Set((state[k]||[]).map(String));
-    s.has(String(i))?s.delete(String(i)):s.add(String(i));
+    // migration au passage : tout l'état repasse en ids
+    const s=new Set(checks().map(String));
+    s.has(String(id))?s.delete(String(id)):s.add(String(id));
     state[k]=[...s];
   });
 }
@@ -597,7 +606,7 @@ function saveEdit(){
 function renderStreak(){
   const streak=state.streak||0;
   const blocks=todayBlocks(),ck=checks();
-  const nnOk=blocks.length>0&&blocks.every((b,i)=>!b.nn||ck.includes(i));
+  const nnOk=blocks.length>0&&blocks.every(b=>!b.nn||ck.includes(b.id));
   const validated=!!state["valid-"+dayKey()];
   document.getElementById("streakPill").textContent="J"+streak;
   document.getElementById("v-streak").innerHTML=`

@@ -19,6 +19,7 @@
         tools:ignore="ProtectedPermissions" />
 
     <application
+        android:name=".LifeOSApp"
         android:label="LifeOS"
         android:icon="@mipmap/ic_launcher"
         android:theme="@style/Theme.LifeOS"

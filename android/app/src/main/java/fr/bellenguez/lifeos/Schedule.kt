@@ -142,14 +142,16 @@ object Schedule {
     /**
      * Bloc à attaquer en focus : celui de l'heure s'il n'est pas coché,
      * sinon le premier non coché qui suit — sans se soucier de l'heure.
+     * `checks` contient des ids d'événements ; le résultat reste un index d'affichage.
      */
-    fun focusTarget(blocks: List<Block>, checks: Set<Int>): Int? {
+    fun focusTarget(blocks: List<Block>, checks: Set<Long>): Int? {
         if (blocks.isEmpty()) return null
+        fun done(i: Int) = blocks[i].id in checks
         val cur = current()
-        if (cur.mode == "now" && cur.idx !in checks) return cur.idx
+        if (cur.mode == "now" && cur.idx >= 0 && !done(cur.idx)) return cur.idx
         val start = if (cur.idx >= 0) cur.idx else 0
-        (start until blocks.size).firstOrNull { it !in checks }?.let { return it }
-        return blocks.indices.firstOrNull { it !in checks }
+        (start until blocks.size).firstOrNull { !done(it) }?.let { return it }
+        return blocks.indices.firstOrNull { !done(it) }
     }
 
     /**
