@@ -389,16 +389,11 @@ private fun LauncherScreen() {
         return
     }
 
-    // onboarding : une seule fois par appareil, juste après le login
+    // visite guidée : une seule fois par appareil, superposée au vrai launcher
+    // (elle met en évidence les vrais éléments — le launcher doit donc être rendu dessous)
     var onboarded by remember { mutableStateOf(Store.onboarded()) }
     var goPlanAfterOnb by remember { mutableStateOf(false) }
-    if (!onboarded) {
-        OnboardingScreen(
-            onDone = { onboarded = true },
-            onOpenPlan = { onboarded = true; goPlanAfterOnb = true }
-        )
-        return
-    }
+    val tourState = remember { TourState() }
 
     var tick by remember { mutableIntStateOf(0) }
     var showAll by remember { mutableStateOf(false) }
@@ -581,6 +576,7 @@ private fun LauncherScreen() {
                 "STREAK : $streak",
                 color = Bw.White, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp,
                 modifier = Modifier
+                    .tourAnchor(tourState, "streak")
                     .border(1.dp, Bw.G4)
                     .clickable { section = "streak" }
                     .padding(horizontal = 12.dp, vertical = 8.dp)
@@ -595,7 +591,7 @@ private fun LauncherScreen() {
             },
             color = if (target != null) Bw.White else Bw.G4,
             fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
-            modifier = Modifier.clickable { section = "plan" }
+            modifier = Modifier.tourAnchor(tourState, "now").clickable { section = "plan" }
         )
         if (target != null) {
             Spacer(Modifier.height(10.dp))
@@ -866,19 +862,20 @@ private fun LauncherScreen() {
         /* ----- Pied : toutes les sections, directement depuis l'accueil ----- */
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             listOf(
-                "PLAN" to { section = "plan" },
-                "SEM." to { section = "week" },
-                "NOTES" to { section = "notes" },
-                "PQ?" to { section = "why" },
-                "APPS" to { showAll = true; search = "" },
-                "STREAK" to { section = "streak" },
-            ).forEach { (label, act) ->
+                Triple("PLAN", "nav_plan", { section = "plan" }),
+                Triple("SEM.", "nav_week", { section = "week" }),
+                Triple("NOTES", "nav_notes", { section = "notes" }),
+                Triple("PQ?", "nav_why", { section = "why" }),
+                Triple("APPS", "nav_apps", { showAll = true; search = "" }),
+                Triple("STREAK", "nav_streak", { section = "streak" }),
+            ).forEach { (label, anchorId, act) ->
                 Text(
                     label,
                     color = Bw.G5, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .weight(1f)
+                        .tourAnchor(tourState, anchorId)
                         .clickable { act() }
                         .padding(vertical = 18.dp)
                 )
@@ -1263,5 +1260,14 @@ private fun LauncherScreen() {
             Spacer(Modifier.height(10.dp))
             BwButton("Annuler", ghost = true) { pickFolderFor = null }
         }
+    }
+
+    /* ----- Visite guidée (par-dessus tout, à la première ouverture) ----- */
+    if (!onboarded && section == null) {
+        TourOverlay(
+            state = tourState,
+            onOpenPlan = { Store.setOnboarded(); onboarded = true; goPlanAfterOnb = true },
+            onFinish = { Store.setOnboarded(); onboarded = true }
+        )
     }
 }
