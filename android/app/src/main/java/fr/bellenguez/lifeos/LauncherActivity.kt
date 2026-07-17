@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -394,7 +395,9 @@ private fun LauncherScreen() {
     var blockMenu by remember { mutableStateOf<Int?>(null) } // appui long sur un bloc du jour
     var editWidget by remember { mutableStateOf<Int?>(null) } // ✎ sur un widget
     var showPerms by remember { mutableStateOf(false) }
-    var section by remember { mutableStateOf<String?>(null) } // plan / week / notes / why / streak
+    // saveable : la section (notes en tête) doit survivre si Android tue le launcher
+    // pendant qu'une autre app (caméra…) est au premier plan
+    var section by rememberSaveable { mutableStateOf<String?>(null) } // plan / week / notes / why / streak
     var search by remember { mutableStateOf("") }
     var openFolder by remember { mutableStateOf<String?>(null) }
     var menuFor by remember { mutableStateOf<String?>(null) }
@@ -405,9 +408,13 @@ private fun LauncherScreen() {
     var layoutVersion by remember { mutableIntStateOf(0) }
     var dataVersion by remember { mutableIntStateOf(0) }
 
-    // geste home (ou retour) → tout refermer, accueil nu
+    // geste home (ou retour) → tout refermer, accueil nu.
+    // Le premier passage est ignoré : à la recréation de l'activité (retour caméra…),
+    // l'effet se relance et refermait la section restaurée.
+    var homeSigSeen by remember { mutableStateOf(false) }
     val homeSig = LauncherActivity.homeSignal.intValue
     LaunchedEffect(homeSig) {
+        if (!homeSigSeen) { homeSigSeen = true; return@LaunchedEffect }
         section = null; showAll = false; showAnkiPicker = false; showClockPicker = false
         menuFor = null; pickFolderFor = null; showPerms = false; blockMenu = null; editWidget = null
         shortcutsFor = null; widgetPkg = null

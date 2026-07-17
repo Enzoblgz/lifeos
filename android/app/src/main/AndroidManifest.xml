@@ -31,11 +31,12 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <!-- Pas de stateNotNeeded : Android doit sauvegarder l'état du launcher quand la
+             caméra (ou une autre app) le tue — sinon le résultat photo/vidéo est perdu. -->
         <activity
             android:name=".LauncherActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:stateNotNeeded="true"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

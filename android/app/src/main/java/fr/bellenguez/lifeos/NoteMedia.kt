@@ -74,11 +74,14 @@ const val ATT_DRW = "drw"
 private fun mediaDir(ctx: Context): File =
     File(ctx.filesDir, "media").apply { if (!exists()) mkdirs() }
 
+/** Uri partageable (FileProvider) d'un fichier média de LifeOS. */
+fun mediaUri(ctx: Context, f: File): Uri =
+    FileProvider.getUriForFile(ctx, "${ctx.packageName}.files", f)
+
 /** Nouveau fichier média de LifeOS + son uri partageable (caméra, micro, dessin). */
 fun newMediaFile(ctx: Context, ext: String): Pair<File, Uri> {
     val f = File(mediaDir(ctx), "${System.currentTimeMillis()}.$ext")
-    val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.files", f)
-    return f to uri
+    return f to mediaUri(ctx, f)
 }
 
 /** Supprime le fichier s'il nous appartient (rien à faire pour un média de la galerie). */
