@@ -8,7 +8,9 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -131,12 +133,28 @@ class LauncherActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { homeSignal.intValue++ }
         })
+        Notifs.schedule(this)            // rappels des blocs restants d'aujourd'hui
+        handleFocusIntent(intent)        // notif « Entrer en focus » à l'ouverture
         setContent { LauncherScreen() }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        homeSignal.intValue++ // geste home → retour à l'accueil nu
+        // une action de notif ne doit pas être écrasée par le retour-accueil
+        if (!handleFocusIntent(intent)) homeSignal.intValue++
+    }
+
+    /** Notif « Entrer en focus » : verrouille sur le bloc si le planning et les perms le permettent. */
+    private fun handleFocusIntent(intent: Intent): Boolean {
+        val id = intent.getLongExtra(Notifs.EXTRA_FOCUS_ID, -1L)
+        if (id <= 0L) return false
+        intent.removeExtra(Notifs.EXTRA_FOCUS_ID) // à usage unique
+        if (Schedule.today().none { it.id == id }) return false
+        if (!hasUsageAccess(this) || !canOverlay(this)) return false
+        Store.startFocus(id)
+        startForegroundService(Intent(this, FocusService::class.java))
+        startActivity(Intent(this, BlockerActivity::class.java))
+        return true
     }
 
     override fun onDestroy() {
@@ -395,6 +413,19 @@ private fun LauncherScreen() {
     var goPlanAfterOnb by remember { mutableStateOf(false) }
     val tourState = remember { TourState() }
 
+    // rappels de bloc : demander la permission de notification une fois (Android 13+)
+    val notifPerm = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { Notifs.schedule(ctx) }
+    LaunchedEffect(Unit) {
+        if (Notifs.enabled() && android.os.Build.VERSION.SDK_INT >= 33 &&
+            ctx.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            notifPerm.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     var tick by remember { mutableIntStateOf(0) }
     var showAll by remember { mutableStateOf(false) }
     var showAnkiPicker by remember { mutableStateOf(false) }
@@ -443,11 +474,12 @@ private fun LauncherScreen() {
         while (true) {
             delay(5000)
             val changed = withContext(Dispatchers.IO) { Supa.pollAndPull() }
-            if (changed) dataVersion++
+            if (changed) { dataVersion++; Notifs.schedule(ctx) } // planning changé sur l'ordi
         }
     }
 
-    fun pushAsync() = Thread { Supa.tryPush() }.start()
+    // le planning a changé (édition locale ou sync) → replanifier les rappels
+    fun pushAsync() { Thread { Supa.tryPush() }.start(); Notifs.schedule(ctx) }
 
     fun launch(pkg: String) {
         pm.getLaunchIntentForPackage(pkg)?.let { ctx.startActivity(it) }

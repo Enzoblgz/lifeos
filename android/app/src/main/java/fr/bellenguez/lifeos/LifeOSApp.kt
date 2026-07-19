@@ -9,5 +9,6 @@ class LifeOSApp : Application() {
         Store.init(this)
         CrashReporter.install(this)
         CrashReporter.uploadPending(this)
+        Notifs.ensureChannel(this)
     }
 }
